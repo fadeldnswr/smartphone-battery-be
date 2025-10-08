@@ -12,8 +12,9 @@ from src.exception.exception import CustomException
 # Define function to create connection to supabase
 def create_supabase_connection() -> Client:
   '''
-  Function to create connection to Supabase database
-  returns: Supabase client instance
+  Function to create connection to Supabase database\n
+  returns: 
+    - Supabase client instance
   '''
   try:
     supabase: Client = create_client(
@@ -27,7 +28,7 @@ def create_supabase_connection() -> Client:
 # Define function to fetch data from database
 def get_data_from_db():
   '''
-  Function to fetch data from Supabase database
+  Function to fetch data from Supabase database\n
   returns: 
   - List of records from the database
   '''
@@ -47,10 +48,11 @@ def get_data_from_db():
 # Define function to insert data into database
 def insert_data_to_db(data):
   '''
-  Function to insert data into Supabase database
+  Function to insert data into Supabase database\n
   parameters:
   - data (list of dicts): Data to be inserted
-  returns: Response from the insert operation
+  \nreturns: 
+  - Response from the insert operation
   '''
   try:
     # Initialize supabase connection
