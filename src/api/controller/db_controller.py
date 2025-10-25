@@ -26,7 +26,7 @@ def create_supabase_connection() -> Client:
     raise CustomException(e, sys)
 
 # Define function to fetch data from database
-def get_data_from_db():
+def get_data_from_db(table:str):
   '''
   Function to fetch data from Supabase database\n
   returns: 
@@ -37,8 +37,12 @@ def get_data_from_db():
     logging.info("Fetching data from database...")
     supabase = create_supabase_connection()
     
-    # Fetch data from supabase table
-    response = supabase.table("raw_smartphone_data").select("*").execute()
+    # Fetch latest data from supabase table
+    response = supabase.table("raw_smartphone_data") \
+    .select(table).order("created_at", desc=True) \
+    .limit(1).execute()
+    
+    # Return fetched data
     data = response.data
     logging.info("Data fetched successfully.")
     return data
