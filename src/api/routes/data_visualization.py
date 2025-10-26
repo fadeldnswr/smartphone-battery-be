@@ -5,7 +5,7 @@ This module defines data flow from smartphone devices to the backend server
 import os
 import sys
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from typing import List, Dict, Any
 
 from src.logging.logging import logging
@@ -16,10 +16,12 @@ router = APIRouter()
 
 # Define data retrieval route
 @router.get("/metrics", status_code=200)
-async def visualize_data_from_smartphone() -> Dict[List, Any]:
+async def visualize_data_from_smartphone(
+  table_name:str = Query(..., description="Fetch latest record for specific table_name")
+  ) -> Dict[List, Any]:
   try:
     logging.info("Get data from database..")
-    raw_data = get_data_from_db()
+    raw_data = get_data_from_db(table=table_name)
     
     logging.info("Data retrieved successfully.")
     return {
