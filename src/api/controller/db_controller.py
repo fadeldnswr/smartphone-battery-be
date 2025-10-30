@@ -8,6 +8,8 @@ import sys
 from supabase import create_client, Client
 from src.logging.logging import logging
 from src.exception.exception import CustomException
+from dotenv import load_dotenv
+load_dotenv()
 
 # Define function to create connection to supabase
 def create_supabase_connection() -> Client:
@@ -18,7 +20,7 @@ def create_supabase_connection() -> Client:
   '''
   try:
     supabase: Client = create_client(
-      os.getenv("SUPABASE_URL"),
+      os.getenv("SUPABASE_API_URL"),
       os.getenv("SUPABASE_API_KEY")
     )
     return supabase
@@ -26,7 +28,7 @@ def create_supabase_connection() -> Client:
     raise CustomException(e, sys)
 
 # Define function to fetch data from database
-def get_data_from_db(table:str):
+def get_data_from_db(table:str, column_name:str):
   '''
   Function to fetch data from Supabase database\n
   returns: 
@@ -38,8 +40,8 @@ def get_data_from_db(table:str):
     supabase = create_supabase_connection()
     
     # Fetch latest data from supabase table
-    response = supabase.table("raw_smartphone_data") \
-    .select(table).order("created_at", desc=True) \
+    response = supabase.table(table) \
+    .select(column_name).order("created_at", desc=True) \
     .limit(1).execute()
     
     # Return fetched data
@@ -50,7 +52,7 @@ def get_data_from_db(table:str):
     raise CustomException(e, sys)
 
 # Define function to insert data into database
-def insert_data_to_db(data):
+def insert_data_to_db(data, table_name):
   '''
   Function to insert data into Supabase database\n
   parameters:
@@ -64,7 +66,7 @@ def insert_data_to_db(data):
     supabase = create_supabase_connection()
     
     # Insert data into supabase table
-    response = supabase.table("raw_smartphone_data").insert(data).execute()
+    response = supabase.table(table_name).insert(data).execute()
     logging.info("Data inserted successfully.")
     return response
   except Exception as e:
