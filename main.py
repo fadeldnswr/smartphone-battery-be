@@ -1,25 +1,35 @@
-'''
+"""
 Main file for smartphone battery health prediction thesis project
-'''
-import sys, os
+"""
 
-from fastapi import FastAPI
-from typing import Dict, Any
-from src.exception.exception import CustomException
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware  
+from typing import Dict
+from src.api.routes import data_retrieval
 
 # Define instances
 app = FastAPI(
-  title="Smartphone Battery Health Prediction API",
-  description="API for predicting smartphone battery health using machine learning models",
-  version="1.0.0"
+    title="Smartphone Battery Health Prediction API",
+    description="API for collecting and visualizing smartphone battery health data.",
+    version="1.0.0"
 )
 
-# Create welcome page route
-@app.get("/")
-async def welcome_page() -> Dict[str, Any]:
-  try:
-    return {
-      "message":"Welcome to the Smartphone Battery Health Prediction API",
-    }
-  except Exception as e:
-    raise CustomException(e, sys)
+# Configure CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Adjust this in production for security
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Define routes
+app.include_router(data_retrieval.router, prefix="/data-retrieval", tags=["Data Retrieval"])
+
+# Define root endpoint
+@app.get("/", status_code=200)
+async def root() -> Dict[str, str]:
+    """
+    Root endpoint to verify API is running.
+    """
+    return {"message": "Smartphone Battery Health Prediction API is running."}
