@@ -28,6 +28,7 @@ async def get_data_from_smartphone(request: Request) -> Dict[str, Any]:
   '''
   try:
     # Define request payload
+    logging.info("Parsing request payload...")
     payload = await request.json()
     
     # Check if device_id is present in payload
@@ -35,11 +36,15 @@ async def get_data_from_smartphone(request: Request) -> Dict[str, Any]:
       raise HTTPException(status_code=400, detail="Missing 'device_id' in request payload!")
     
     # Create supabase connection
+    logging.info("Creating Supabase connection...")
     supabase = create_supabase_connection()
     
     # Look for user_id based on device_id
+    logging.info("Looking for user_id based on device_id...")
     device_id = payload["device_id"]
     user_id = None
+    
+    logging.info(f"Fetching user_id for device_id: {device_id}...")
     try:
       if device_id:
         row = (
@@ -63,6 +68,7 @@ async def get_data_from_smartphone(request: Request) -> Dict[str, Any]:
       raise HTTPException(status_code=500, detail="Supabase credentials are not set properly!")
     
     # Insert data to supabase
+    logging.info("Inserting data to Supabase...")
     response = supabase.table("raw_metrics").insert(payload).execute()
     
     # Return success response
