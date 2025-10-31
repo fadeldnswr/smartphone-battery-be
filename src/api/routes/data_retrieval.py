@@ -3,12 +3,12 @@ Data retrieval API routes, including endpoints for data collection and retrieval
 This module defines data flow from smartphone devices to the backend server
 '''
 
+import os
+
 from fastapi import APIRouter, HTTPException, Query, Request
 from typing import List, Dict, Any
 from src.logging.logging import logging
-
-import httpx
-import os
+from src.api.controller.db_controller import create_supabase_connection
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -30,32 +30,42 @@ async def get_data_from_smartphone(request: Request) -> Dict[str, Any]:
     # Define request payload
     payload = await request.json()
     
+    # Check if device_id is present in payload
+    if "device_id" not in payload:
+      raise HTTPException(status_code=400, detail="Missing 'device_id' in request payload!")
+    
+    # Create supabase connection
+    supabase = create_supabase_connection()
+    
+    # Look for user_id based on device_id
+    device_id = payload["device_id"]
+    user_id = None
+    try:
+      if device_id:
+        row = (
+          supabase.table("devices")
+          .select("user_id")
+          .eq("device_id", device_id)
+          .maybe_single()
+          .execute()
+        )
+        if row.data and row.data.get("user_id"):
+          user_id = row.data["user_id"]
+    except Exception:
+      pass
+    
+    # Insert user_id to payload if found
+    if user_id:
+      payload["user_id"] = user_id
+    
     # Check if there is not SUPABASE credentials
     if not URL or not API_KEY:
       raise HTTPException(status_code=500, detail="Supabase credentials are not set properly!")
     
-    # Validate payload
-    if "device_id" not in payload:
-      raise HTTPException(status_code=400, detail="Missing 'device_id' in request payload!")
+    # Insert data to supabase
+    response = supabase.table("raw_metrics").insert(payload).execute()
     
-    # Make async request to Supabase to fetch data
-    async with httpx.AsyncClient() as client:
-      response = await client.post(
-        url=f"{URL}/rest/v1/raw_metrics",
-        headers={
-          "apiKey": API_KEY,
-          "Authorization": f"Bearer {API_KEY}",
-          "Prefer": "return=minimal",
-          "Content-Type": "application/json"
-        },
-        json=payload,
-        timeout=10.0
-      )
-      
-      # If not successful, raise HTTP exception
-      if response.status_code not in (200, 201, 204):
-        detail = response.text
-        raise HTTPException(status_code=response.status_code, detail=f"Supabase error: {detail}")
+    # Return success response
     return {
       "ok": True,
       "message": "Data has been retrieved successfully",
