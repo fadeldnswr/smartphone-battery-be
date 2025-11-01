@@ -8,13 +8,15 @@ import pandas as pd
 from src.api.controller.db_controller import create_supabase_connection
 from src.exception.exception import CustomException
 from src.logging.logging import logging
+from src.api.model.raw_metrics import RawMetrics
 
 # Define data ingestion class
 class DataIngestion:
-  def __init__(self, table_name:str):
+  def __init__(self, table_name:str, response:RawMetrics):
     self.table_name = table_name
     self.supabase = None
     self.device_id = None
+    self.response = response
   
   def extract_data_from_db(self) -> pd.DataFrame:
     '''
@@ -40,16 +42,19 @@ class DataIngestion:
         .execute()
       )
       
-      # Convert data to dataframe
-      logging.info("Converting data to DataFrame...")
-      df = pd.DataFrame(
-        response.data, 
-        columns=response.data[0].keys() if response.data else []
-        )
-      
-      # Return the dataframe
-      return df
+      # Check if response data equal to RawMetrics model
+      if response.data != RawMetrics:
+        logging.error("Response data does not match RawMetrics model!")
+        raise CustomException("Response data does not match RawMetrics model!", sys)
+      else:
+        # Convert data to dataframe
+        logging.info("Converting data to DataFrame...")
+        df = pd.DataFrame(
+          response.data, 
+          columns=response.data[0].keys() if response.data else []
+          )
+        
+        # Return the dataframe
+        return df
     except Exception as e:
       raise CustomException(e, sys)
-
-DataIngestion.extract_data_from_db()
