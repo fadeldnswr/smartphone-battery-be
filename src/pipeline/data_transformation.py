@@ -9,24 +9,23 @@ import sys
 
 from src.logging.logging import logging
 from src.exception.exception import CustomException
-from src.pipeline.data_ingestion import DataIngestion
+from src.service.metrics_calculation import MetricsCalculation
 
 # Define data transformation class
 class DataTransformation:
   def __init__(self, data: pd.DataFrame):
-    self.data = None
+    self.data = data
   
-  def transform_data(self) -> pd.DataFrame:
+  def compute_throughput(self) -> pd.DataFrame:
     '''
     Function to transform raw data into a suitable format for analysis.
     '''
     try:
-      # Initiate data ingestion
-      logging.info("Starting data ingestion...")
-      self.data = DataIngestion(table_name="raw_metrics")
-      self.data.extract_data_from_db()
-      
       # Perform data transformation equation
       logging.info("Transforming data...")
+      transformed_data = MetricsCalculation(df=self.data).calculate_throughput()
+      
+      logging.info("Troughput calculation completed successfully.")
+      return transformed_data
     except Exception as e:
       raise CustomException(e, sys)
