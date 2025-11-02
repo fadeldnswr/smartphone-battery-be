@@ -69,7 +69,14 @@ async def get_data_from_smartphone(request: Request) -> Dict[str, Any]:
     
     # Insert data to supabase
     logging.info("Inserting data to Supabase...")
-    response = supabase.table("raw_metrics").insert(payload).execute()
+    supabase.table("raw_metrics").insert(payload).execute()
+    
+    # Insert to raw_metrics_5min
+    logging.info("Inserting data to raw_metrics_5min...")
+    try:
+      supabase.table("raw_metrics_5min").insert(payload).execute()
+    except Exception as e:
+      logging.error(f"Error inserting to raw_metrics_5min: {e}")
     
     # Return success response
     return {
@@ -79,4 +86,5 @@ async def get_data_from_smartphone(request: Request) -> Dict[str, Any]:
   except HTTPException:
     raise
   except Exception as e:
+    logging.error(f"Error in get_data_from_smartphone: {e}")
     raise HTTPException(status_code=500, detail=str(e))

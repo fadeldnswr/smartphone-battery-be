@@ -11,7 +11,7 @@ class RawMetrics(BaseModel):
   user_id: Optional[str] = None
   device_id: str
   channel_quality: float
-  ts_uts: datetime
+  ts_utc: datetime
   net_type: str
   rx_total_bytes: int
   tx_total_bytes: int
@@ -29,7 +29,16 @@ class RawMetrics(BaseModel):
   battery_capacity_pct: int
   current_avg_ua: Optional[int] = None
 
+# Define metrics for throughput
+class ThroughputMetrics(BaseModel):
+  device_id: Optional[str] = None
+  created_at: Optional[datetime] = None
+  throughput_total_mbps: Optional[float] = None
+  throughput_upload_mbps: Optional[float] = None
+  throughput_download_mbps: Optional[float] = None
+
 # Define metrics response model
 class RawMetricsResponse(BaseModel):
   message: str
   data: List[Dict[str, Any]]
+  throughput: Optional[List[ThroughputMetrics]] = None
