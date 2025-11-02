@@ -3,7 +3,7 @@ Raw metrics data model.
 This module defines the RawMetrics class for handling raw metrics data.
 '''
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List, Dict, Any
 from datetime import datetime
 
 # Define RawMetrics data model
@@ -28,3 +28,8 @@ class RawMetrics(BaseModel):
   energy_nwh: Optional[int] = None
   battery_capacity_pct: int
   current_avg_ua: Optional[int] = None
+
+# Define metrics response model
+class RawMetricsResponse(BaseModel):
+  message: str
+  data: List[Dict[str, Any]]

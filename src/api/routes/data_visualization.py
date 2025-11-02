@@ -10,16 +10,16 @@ from typing import List, Dict, Any
 
 from src.logging.logging import logging
 from src.api.controller.db_controller import create_supabase_connection 
+from src.api.model.raw_metrics import RawMetricsResponse
 
 # Define router instance
 router = APIRouter()
 
 # Define data retrieval route
-@router.get("/metrics", status_code=200)
+@router.get("/raw-metrics", status_code=200, response_model=RawMetricsResponse)
 async def visualize_data_from_smartphone(
   table_name:str = Query(..., description="Fetch latest record for specific table_name"),
-  device_id:str = Query(..., description="Device ID to filter data")
-  ) -> Dict[List, Any]:
+  device_id:str = Query(..., description="Device ID to filter data")) -> RawMetricsResponse:
   try:
     logging.info("Get data from database..")
     supabase = create_supabase_connection()

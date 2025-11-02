@@ -5,7 +5,7 @@ Main file for smartphone battery health prediction thesis project
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware  
 from typing import Dict
-from src.api.routes import data_retrieval
+from src.api.routes import data_retrieval, data_visualization
 
 # Define instances
 app = FastAPI(
@@ -25,6 +25,7 @@ app.add_middleware(
 
 # Define routes
 app.include_router(data_retrieval.router, prefix="/data-retrieval", tags=["Data Retrieval"])
+app.include_router(data_visualization.router, prefix="/data-visualization", tags=["Data Visualization"])
 
 # Define root endpoint
 @app.get("/", status_code=200)
