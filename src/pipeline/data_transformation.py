@@ -16,7 +16,7 @@ class DataTransformation:
   def __init__(self, data: pd.DataFrame):
     self.data = data
   
-  def compute_metrics(self) -> pd.DataFrame:
+  def compute_throughput(self) -> pd.DataFrame:
     '''
     Function to transform raw data into a suitable format for analysis.
     '''
