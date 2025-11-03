@@ -23,4 +23,4 @@ class GraphsHistoryResponse(BaseModel):
   message: str
   device_id: str
   thr_points: List[ThroughputPoint]
-  thr_energy: List[EnergyConsumptionPoint]
+  energy_points: List[EnergyConsumptionPoint]

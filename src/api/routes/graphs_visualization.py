@@ -50,27 +50,37 @@ async def get_throughput_history(
         "energy_points": []
       }
     
-    # Exclude null values
-    df_metrics = df_metrics.dropna(subset=["throughput_total_mbps"])
-    df_metrics = df_metrics[df_metrics["throughput_total_mbps"] >= 0]
+    # Create datetime column
+    df_metrics["created_at"] = pd.to_datetime(df_metrics["created_at"])
     df_metrics = df_metrics.sort_values("created_at")
+    
+    # Prepare data points for throughput
+    if "throughput_total_mbps" in df_metrics.columns:
+      df_thr = df_metrics.dropna(subset=["throughput_total_mbps"])
+      df_thr = df_thr[df_thr["throughput_total_mbps"] >= 0]
+    else:
+      df_thr = pd.DataFrame()
     
     # Define throughput data points
     thr_points = []
-    for _, row in df_metrics.iterrows():
-      thr_points.append(
-        ThroughputPoint(
-          timestamp=row["created_at"],
-          throughput_total_mbps=float(row["throughput_total_mbps"]),
-          throughput_upload_mbps=float(row["throughput_upload_mbps"]),
-          throughput_download_mbps=float(row["throughput_download_mbps"])
+    # Check if df_thr is not empty
+    if not df_thr.empty:
+      for _, row in df_thr.iterrows():
+        thr_points.append(
+          ThroughputPoint(
+            timestamp=row["created_at"],
+            throughput_total_mbps=float(row["throughput_total_mbps"]),
+            throughput_upload_mbps=float(row.get("throughput_upload_mbps", 0.0)),
+            throughput_download_mbps=float(row.get("throughput_download_mbps", 0.0))
+          )
         )
-      )
     
     # Define energy consumption data points
     energy_points = []
-    for _, row in df_metrics.iterrows():
-      if "energy_wh" in row and pd.notna(row["energy_wh"]):
+    # Check if energy_wh column exists
+    if "energy_wh" in df_metrics.columns:
+      df_energy = df_metrics.dropna(subset=["energy_wh"])
+      for _, row in df_energy.iterrows():
         energy_points.append(
           EnergyConsumptionPoint(
             timestamp=row["created_at"],
