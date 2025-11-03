@@ -17,4 +17,4 @@ class ThroughputPoint(BaseModel):
 class ThroughputHistoryResponse(BaseModel):
   message: str
   device_id: str
-  data_points: List[ThroughputPoint]
+  points: List[ThroughputPoint]
