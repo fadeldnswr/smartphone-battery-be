@@ -46,6 +46,21 @@ class DataTransformation:
     except Exception as e:
       raise CustomException(e, sys)
   
+  def compute_throughput_and_bot(self) -> pd.DataFrame:
+    '''
+    Function to compute throughput based energy consumption and battery cost of traffic.
+    '''
+    try:
+      # Perform throughput based energy computation
+      logging.info("Computing throughput based energy consumption and battery cost of traffic...")
+      bot_data = MetricsCalculation(df=self.data)
+      bot_df = bot_data.calculate_throughput_energy_and_bot()
+      
+      logging.info("Throughput based energy consumption and battery cost of traffic calculation completed successfully.")
+      return bot_df
+    except Exception as e:
+      raise CustomException(e, sys)
+  
   def compute_metrics(self) -> pd.DataFrame:
     '''
     Function to compute both throughput and energy consumption metrics.
@@ -61,15 +76,28 @@ class DataTransformation:
       logging.info("Computing energy consumption metrics...")
       energy_df = calc.calculate_energy_consumption()
       
+      logging.info("Calculate energy per bit and battery cost of traffic metrics...")
+      energy_bot_df = calc.calculate_throughput_energy_and_bot()
+      
       # Check if dataframes are empty
-      if throughput_df is None or throughput_df.empty:
-        return energy_df
-      if energy_df is None or energy_df.empty:
-        return throughput_df
+      if (throughput_df is None or throughput_df.empty) and (energy_df is None or energy_df.empty):
+        return pd.DataFrame()
       
       # Merge dataframes on common columns
       logging.info("Merging throughput and energy data...")
-      merged_df = pd.merge(throughput_df, energy_df[["device_id", "created_at", "energy_wh"]], on=["device_id", "created_at"], how="left")
+      merged_df = pd.merge(
+        throughput_df, 
+        energy_df[["device_id", "created_at", "energy_wh", "batt_voltage_v"]], 
+        on=["device_id", "created_at"], how="left"
+      )
+      
+      # Check if energy_bot_df is not empty before merging
+      if energy_bot_df is not None and not energy_bot_df.empty:
+        merged_df = pd.merge(
+          merged_df,
+          energy_bot_df[["device_id", "created_at", "energy_per_bit_tx_J", "energy_per_bit_rx_J", "energy_per_bit_avg_J", "BoT_mAh_per_Gbps"]],
+          on=["device_id", "created_at"], how="left"
+        )
       
       logging.info("Metrics computation completed successfully.")
       return merged_df

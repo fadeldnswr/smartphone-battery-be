@@ -15,15 +15,45 @@ from src.logging.logging import logging
 class MetricsCalculation:
   def __init__(self, df: pd.DataFrame):
     self.df = df
+    self.alpha_tx = 446.
+    self.beta_tx = 3.381132
+    self.alpha_rx = 357.5443
+    self.beta_rx = 1.969068
+  
+  def _base_guard(self, df:pd.DataFrame) -> pd.DataFrame:
+    '''
+    Function to perform base checks on dataframe.\n
+    params:
+    - df: DataFrame to be checked.
+    \nreturns:
+    - DataFrame after checks.
+    '''
+    # Check if dataframe is None or empty
+    if df is None or df.empty:
+      logging.info("Empty dataframe, nothing to compute.")
+      return df
+    
+    # Ensure created_at is datetime and sort values
+    df = df.copy()
+    df["created_at"] = pd.to_datetime(df["created_at"])
+    df = df.sort_values(["device_id", "created_at"])
+    return df
   
   def calculate_energy_consumption(self) -> pd.DataFrame:
     '''
-    Function to calculate energy consumption from raw data.
+    Function to calculate energy consumption from raw data.\n
+    params:
+    - df: DataFrame containing raw data with battery voltage and current metrics.
+    \nreturns:
+    - DataFrame with calculated energy consumption values.
     '''
     try:
+      # Create a copy of dataframe
+      new_df = self._base_guard(self.df)
+      
       # Check if dataframe is not empty
-      if self.df.empty:
-        return self.df
+      if new_df.empty or new_df is None:
+        return new_df
       
       # Make sure created_at is datetime
       logging.info("Calculating energy consumption...")
@@ -49,11 +79,53 @@ class MetricsCalculation:
     except Exception as e:
       raise CustomException(e, sys)
   
-  def calculate_throughput_based_energy_consumption(self):
+  def calculate_throughput_energy_and_bot(self) -> pd.DataFrame:
     '''
     Function to calculate throughput based energy consumption.
     '''
-    pass
+    try:
+      # Create a copy of dataframe
+      new_df = self._base_guard(self.df)
+      
+      # Check if dataframe is not empty
+      if new_df.empty or new_df is None:
+        return new_df
+      
+      # Calculate throughput first
+      thr_calc = self.calculate_throughput()
+      energy_calc = self.calculate_energy_consumption()
+      
+      # Merge both dataframes on device_id and created_at
+      df = pd.merge(
+        thr_calc[["device_id", "created_at", "throughput_total_bps"]],
+        energy_calc[["device_id", "created_at", "batt_voltage_v", "energy_wh"]],
+        on=["device_id", "created_at"],
+        how="inner",
+      ).sort_values(["device_id", "created_at"])
+      
+      # Make sure throughput data dont have zero values
+      df["throughput_total_bps"] = df["throughput_total_bps"].replace(0, np.nan)
+      
+      # Calculate energy per bit
+      df["energy_per_bit_tx"] = (self.alpha_tx / df["throughput_total_bps"]) + self.beta_tx
+      df["energy_per_bit_rx"] = (self.alpha_rx / df["throughput_total_bps"]) + self.beta_rx
+      df["energy_per_bit_tx_J"] = df["energy_per_bit_tx"] * 1e-9
+      df["energy_per_bit_rx_J"] = df["energy_per_bit_rx"] * 1e-9
+      
+      # Total combination of energy per bit
+      df["energy_per_bit_avg_J"] = (df["energy_per_bit_tx_J"] + df["energy_per_bit_rx_J"]) / 2
+      
+      # Convert to volt and ampere for battery cost of traffic calculation
+      V_avg = df["batt_voltage_v"].mean()
+      
+      # Calculate Battery cost of traffic (BoT) in mAh per Gbps
+      df["BoT_mAh_per_Gbps"] = (df["energy_per_bit_avg_J"] * (8 * 1e9) / V_avg) * (1000 / 3600)
+      
+      # Return dataframe with throughput based energy consumption
+      return df
+
+    except Exception as e:
+      raise CustomException(e, sys)
   
   def calculate_soh(self):
     '''
@@ -75,12 +147,19 @@ class MetricsCalculation:
   
   def calculate_throughput(self) -> pd.DataFrame:
     '''
-    Function to calculate throughput from raw data.
+    Function to calculate throughput from raw data.\n
+    params:
+    - df: DataFrame containing raw data with tx_total_bytes and rx_total_bytes metrics.
+    \nreturns:
+    - DataFrame with calculated throughput values.
     '''
     try:
+      # Create a copy of dataframe
+      new_df = self._base_guard(self.df)
+      
       # Check if dataframe is not empty
-      if self.df.empty:
-        return self.df
+      if new_df.empty or new_df is None:
+        return new_df
       
       # Copy the dataframe and sort by device_id and created_at
       new_df = self.df.copy()

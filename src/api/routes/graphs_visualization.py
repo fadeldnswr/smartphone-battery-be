@@ -7,7 +7,11 @@ from fastapi import APIRouter, HTTPException, Query
 from typing import List, Dict, Any
 
 from src.logging.logging import logging
-from src.api.model.graphs_model import GraphsHistoryResponse, ThroughputPoint, EnergyConsumptionPoint
+from src.api.model.graphs_model import (
+  GraphsHistoryResponse, ThroughputPoint, 
+  EnergyConsumptionPoint, BatteryCostOfTrafficPoint,
+  EnergyPerBitPoint
+  )
 from src.pipeline.data_ingestion import DataIngestion
 from src.pipeline.data_transformation import DataTransformation
 
@@ -88,12 +92,40 @@ async def get_throughput_history(
           )
         )
     
+    # Define energy per bit data points
+    energy_per_bit_points = []
+    if "energy_per_bit_avg_J" in df_metrics.columns:
+      df_epb = df_metrics.dropna(subset=["energy_per_bit_avg_J"])
+      for _, row in df_epb.iterrows():
+        energy_per_bit_points.append(
+          EnergyPerBitPoint(
+            timestamp=row["created_at"],
+            energy_per_bit_tx_J=float(row.get("energy_per_bit_tx_J", 0.0)),
+            energy_per_bit_rx_J=float(row.get("energy_per_bit_rx_J", 0.0)),
+            energy_per_bit_avg_J=float(row["energy_per_bit_avg_J"])
+          )
+        )
+    
+    # Define battery cost of traffic data points
+    bot_points = []
+    if "BoT_mAh_per_Gbps" in df_metrics.columns:
+      df_bot = df_metrics.dropna(subset=["BoT_mAh_per_Gbps"])
+      for _, row in df_bot.iterrows():
+        bot_points.append(
+          BatteryCostOfTrafficPoint(
+            timestamp=row["created_at"],
+            bot_mAh_per_Gbps=float(row["BoT_mAh_per_Gbps"])
+          )
+        )
+    
     # Return response
     return {
       "message": "Throughput history retrieved successfully",
       "device_id": device_id,
       "thr_points": thr_points,
-      "energy_points": energy_points
+      "energy_points": energy_points,
+      "energy_per_bit_points": energy_per_bit_points,
+      "bot_points": bot_points
     }
   except Exception as e:
     logging.error(f"Error in get_throughput_history: {e}")

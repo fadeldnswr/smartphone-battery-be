@@ -18,9 +18,23 @@ class EnergyConsumptionPoint(BaseModel):
   timestamp: datetime
   energy_wh: float
 
+# Define battery cost of traffic point
+class BatteryCostOfTrafficPoint(BaseModel):
+  timestamp: datetime
+  bot_mAh_per_Gbps: float
+
+# Define energy per bit point
+class EnergyPerBitPoint(BaseModel):
+  timestamp: datetime
+  energy_per_bit_tx_J: float
+  energy_per_bit_rx_J: float
+  energy_per_bit_avg_J: float
+
 # Define throughput history model
 class GraphsHistoryResponse(BaseModel):
   message: str
   device_id: str
   thr_points: List[ThroughputPoint]
   energy_points: List[EnergyConsumptionPoint]
+  energy_per_bit_points: List[EnergyPerBitPoint]
+  bot_points: List[BatteryCostOfTrafficPoint]
