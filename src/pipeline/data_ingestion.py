@@ -32,7 +32,7 @@ class DataIngestion:
       response = (
         self.supabase.table(self.table_name)
         .select("*")
-        .order("created_at", desc=False))
+        .order("ts_utc", desc=True))
       
       # Check for device_id filter
       if self.device_id:

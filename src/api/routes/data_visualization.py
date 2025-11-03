@@ -4,6 +4,7 @@ This module defines data flow from smartphone devices to the backend server
 '''
 import os
 import sys
+import pandas as pd
 
 from fastapi import APIRouter, HTTPException, Query
 from typing import List, Dict, Any
@@ -39,18 +40,19 @@ async def visualize_data_from_smartphone(
     logging.info(f"Transformed data shape: {transformed.shape}")
     
     # Take last record of transformed data
-    df_raw = df_raw.sort_values(by="created_at")
+    df_raw["ts_utc"] = pd.to_datetime(df_raw["ts_utc"]) 
+    df_raw = df_raw.sort_values(by="ts_utc")
     latest_raw = df_raw.iloc[-1].to_dict()
     
     # Check if transformed data is not empty
     latest_thr_dict = None
     if not transformed.empty:
-      transformed = transformed.sort_values("created_at")
+      transformed = transformed.sort_values("ts_utc")
       latest_thr_dict = transformed.iloc[-1].to_dict()
       
       latest_thr_dict = {
         "device_id": latest_thr_dict["device_id"],
-        "created_at": latest_thr_dict["created_at"].isoformat(),
+        "ts_utc": latest_thr_dict["ts_utc"],
         "throughput_upload_mbps": float(latest_thr_dict["throughput_upload_mbps"]),
         "throughput_download_mbps": float(latest_thr_dict["throughput_download_mbps"]),
         "throughput_total_mbps": float(latest_thr_dict["throughput_total_mbps"]),
