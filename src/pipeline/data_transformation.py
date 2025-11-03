@@ -16,14 +16,16 @@ class DataTransformation:
   def __init__(self, data: pd.DataFrame):
     self.data = data
   
-  def compute_throughput(self) -> pd.DataFrame:
+  def compute_metrics(self) -> pd.DataFrame:
     '''
     Function to transform raw data into a suitable format for analysis.
     '''
     try:
       # Perform data transformation equation
       logging.info("Transforming data...")
-      transformed_data = MetricsCalculation(df=self.data).calculate_throughput()
+      transformed_data = MetricsCalculation(df=self.data)
+      transformed_data.calculate_throughput()
+      transformed_data.calculate_energy_consumption()
       
       logging.info("Troughput calculation completed successfully.")
       return transformed_data

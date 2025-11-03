@@ -16,11 +16,38 @@ class MetricsCalculation:
   def __init__(self, df: pd.DataFrame):
     self.df = df
   
-  def calculate_energy_consumption(self):
+  def calculate_energy_consumption(self) -> pd.DataFrame:
     '''
     Function to calculate energy consumption from raw data.
     '''
-    pass
+    try:
+      # Check if dataframe is not empty
+      if self.df.empty:
+        return self.df
+      
+      # Make sure created_at is datetime
+      logging.info("Calculating energy consumption...")
+      new_df = self.df.copy()
+      new_df["created_at"] = pd.to_datetime(new_df["created_at"])
+      new_df = new_df.sort_values(["device_id", "created_at"])
+      
+      # Calculate delta per device
+      new_df["delta_t"] = new_df.groupby("device_id")["created_at"].diff().dt.total_seconds()
+      
+      # Convert to volt and ampere
+      logging.info("Converting battery metrics to standard units...")
+      new_df["batt_voltage_v"] = new_df["batt_voltage_mv"] / 1000
+      new_df["batt_current_a"] = new_df["current_avg_ua"] / 1000000
+      
+      # Calculate energy per step
+      logging.info("Computing energy consumption values...")
+      new_df["energy_wh"] = (new_df["batt_voltage_v"] * new_df["batt_current_a"] * new_df["delta_t"]) / 3600
+      
+      # Return dataframe with energy consumption
+      logging.info(new_df[["created_at", "batt_voltage_v", "batt_current_a", "energy_wh"]].head())
+      return new_df
+    except Exception as e:
+      raise CustomException(e, sys)
   
   def calculate_throughput_based_energy_consumption(self):
     '''

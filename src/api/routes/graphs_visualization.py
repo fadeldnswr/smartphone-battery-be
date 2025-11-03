@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException, Query
 from typing import List, Dict, Any
 
 from src.logging.logging import logging
-from src.api.model.graphs_model import ThroughputHistoryResponse, ThroughputPoint
+from src.api.model.graphs_model import GraphsHistoryResponse, ThroughputPoint, EnergyConsumptionPoint
 from src.pipeline.data_ingestion import DataIngestion
 from src.pipeline.data_transformation import DataTransformation
 
@@ -15,10 +15,10 @@ from src.pipeline.data_transformation import DataTransformation
 router = APIRouter()
 
 # Define throughput history route
-@router.get("/metrics/throughput", status_code=200, response_model=ThroughputHistoryResponse)
+@router.get("/metrics", status_code=200, response_model=GraphsHistoryResponse)
 async def get_throughput_history(
   device_id: str = Query(..., description="Device ID"),
-  limit: int = Query(1000, ge=10, le=5000, description="Data fetch limit")) -> ThroughputHistoryResponse:
+  limit: int = Query(1000, ge=10, le=5000, description="Data fetch limit")) -> GraphsHistoryResponse:
   '''
   Function to retrieve throughput history for graph visualization.\n
   params:
@@ -35,28 +35,30 @@ async def get_throughput_history(
     if df_raw.empty:
       return {
         "device_id": device_id,
-        "points": []
+        "thr_points": [],
+        "energy_points": []
       }
     
     # Calculate throughput
-    df_throughput = DataTransformation(data=df_raw).compute_throughput()
+    df_metrics = DataTransformation(data=df_raw).compute_metrics()
     
     # Check if throughput data is empty
-    if df_throughput.empty:
+    if df_metrics.empty:
       return {
         "device_id": device_id,
-        "points": []
+        "thr_points": [],
+        "energy_points": []
       }
     
     # Exclude null values
-    df_throughput = df_throughput.dropna(subset=["throughput_total_mbps"])
-    df_throughput = df_throughput[df_throughput["throughput_total_mbps"] >= 0]
-    df_throughput = df_throughput.sort_values("created_at")
+    df_metrics = df_metrics.dropna(subset=["throughput_total_mbps"])
+    df_metrics = df_metrics[df_metrics["throughput_total_mbps"] >= 0]
+    df_metrics = df_metrics.sort_values("created_at")
     
-    # Define data points
-    points = []
-    for _, row in df_throughput.iterrows():
-      points.append(
+    # Define throughput data points
+    thr_points = []
+    for _, row in df_metrics.iterrows():
+      thr_points.append(
         ThroughputPoint(
           timestamp=row["created_at"],
           throughput_total_mbps=float(row["throughput_total_mbps"]),
@@ -65,11 +67,23 @@ async def get_throughput_history(
         )
       )
     
+    # Define energy consumption data points
+    energy_points = []
+    for _, row in df_metrics.iterrows():
+      if "energy_wh" in row and pd.notna(row["energy_wh"]):
+        energy_points.append(
+          EnergyConsumptionPoint(
+            timestamp=row["created_at"],
+            energy_wh=float(row["energy_wh"])
+          )
+        )
+    
     # Return response
     return {
       "message": "Throughput history retrieved successfully",
       "device_id": device_id,
-      "points": points
+      "thr_points": thr_points,
+      "energy_points": energy_points
     }
   except Exception as e:
     logging.error(f"Error in get_throughput_history: {e}")

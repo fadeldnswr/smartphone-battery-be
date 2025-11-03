@@ -13,8 +13,14 @@ class ThroughputPoint(BaseModel):
   throughput_upload_mbps: float
   throughput_download_mbps: float
 
+# Define energy consumption point
+class EnergyConsumptionPoint(BaseModel):
+  timestamp: datetime
+  energy_wh: float
+
 # Define throughput history model
-class ThroughputHistoryResponse(BaseModel):
+class GraphsHistoryResponse(BaseModel):
   message: str
   device_id: str
-  points: List[ThroughputPoint]
+  thr_points: List[ThroughputPoint]
+  thr_energy: List[EnergyConsumptionPoint]
