@@ -131,7 +131,7 @@ class MetricsCalculation:
     except Exception as e:
       raise CustomException(e, sys)
   
-  def calculate_soh(self) -> pd.DataFrame:
+  def calculate_soh(self, C0_mAh: float = 4090.0, roll_win: int = 3) -> pd.DataFrame:
     '''
     Function to calculate State of Health (SoH) from raw data.\n
     params:
@@ -155,27 +155,44 @@ class MetricsCalculation:
       # Calculate state of health
       logging.info("Calculating State of Health (SoH)...")
       
-      # Estimate design capacity per devices
-      design_cap = (
-        new_df.groupby("device_id")["charge_counter_uah"]
-        .transform("max")
+      # Convert charge counter to mAh
+      new_df["Q_mAh"] = new_df["charge_counter_uah"] / 1000
+      
+      # Flag full for detecting full charge cycles
+      new_df["is_full"] = (new_df["battery_level"] >= 100).astype(int)
+      
+      # Identify full charge events
+      block_id = (new_df["is_full"].ne(new_df["is_full"].shift(1))).cumsum()
+      new_df["full_block_id"] = np.where(new_df["is_full"] == 1, block_id, np.nan)
+      
+      # Map every ct_mah = max(Q_mAh)
+      ct_map = (
+        new_df.dropna(subset=["full_block_id"])
+        .groupby("full_block_id")["Q_mAh"]
+        .max()
+        .to_dict()
       )
       
-      # Avoid division by zero
-      design_cap = design_cap.replace(0, np.nan)
-      new_df["design_capacity_uah"] = design_cap
+      new_df["Ct_mAh"] = np.nan
+      for bid, ct in ct_map.items():
+        # Choose index when Q_mAh is maximum in that block
+        idx = new_df.loc[new_df["full_block_id"] == bid, "Q_mAh"].idxmax()
+        new_df.loc[idx, "Ct_mAh"] = ct
       
-      # SoH = current capacity / design capacity * 100%
-      new_df["soh_pct"] = (
-        (new_df["charge_counter_uah"] / new_df["design_capacity_uah"]) * 100
-      )
+      # Forward fill Ct_mAh values
+      new_df["Ct_mAh"] = new_df["Ct_mAh"].ffill()
       
-      # Clamp values
-      new_df["soh_pct"] = new_df["soh_pct"].clip(lower=0, upper=100)
+      # SoH calculation
+      new_df["SoH"] = (new_df["Ct_mAh"] / C0_mAh)
+      new_df["soh_pct"] = new_df["SoH"] * 100
       
-      logging.info(
-        new_df[["device_id", "created_at", "charge_counter_uah", "design_capacity_uah", "soh_pct"]].head()
-      )
+      # Simple smoothing
+      if roll_win and roll_win > 1:
+        new_df["soh_smooth"] = new_df["soh_pct"].rolling(window=roll_win, min_periods=3).mean()
+      else:
+        new_df["soh_smooth"] = new_df["soh_pct"]
+      
+      logging.info(new_df[["created_at", "Q_mAh", "Ct_mAh", "soh_pct", "soh_smooth"]].head())
       
       # Return dataframe with SoH values
       return new_df
@@ -232,7 +249,7 @@ class MetricsCalculation:
       )
       
       logging.info(
-        new_df[["device_id", "created_at", "charge_counter_uah", "design_capacity_uah", "discharge_uah", "cycles_est"]].head()
+        new_df[["charge_counter_uah", "delta_charge_uah", "discharge_uah", "cycles_est"]].head()
       )
       
       # Return dataframe 

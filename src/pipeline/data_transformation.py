@@ -61,6 +61,36 @@ class DataTransformation:
     except Exception as e:
       raise CustomException(e, sys)
   
+  def compute_cycles(self) -> pd.DataFrame:
+    '''
+    Function to compute battery cycles from raw data.
+    '''
+    try:
+      # Perform battery cycles computation
+      logging.info("Computing battery cycles...")
+      cycles_data = MetricsCalculation(df=self.data)
+      cycles_df = cycles_data.calculate_battery_cycles()
+      
+      logging.info("Battery cycles calculation completed successfully.")
+      return cycles_df
+    except Exception as e:
+      raise CustomException(e, sys)
+  
+  def compute_soh(self) -> pd.DataFrame:
+    '''
+    Function to computer State of Health (SoH) from raw data.
+    '''
+    try:
+      # Perform SoH computation
+      logging.info("Computing State of Health (SoH)...")
+      soh_data = MetricsCalculation(df=self.data)
+      soh_df = soh_data.calculate_soh()
+      
+      logging.info("State of Health (SoH) calculation completed successfully.")
+      return soh_df
+    except Exception as e:
+      raise CustomException(e, sys)
+  
   def compute_metrics(self) -> pd.DataFrame:
     '''
     Function to compute both throughput and energy consumption metrics.
@@ -76,8 +106,17 @@ class DataTransformation:
       logging.info("Computing energy consumption metrics...")
       energy_df = calc.calculate_energy_consumption()
       
+      # Compute energy per bit and battery cost of traffic metrics
       logging.info("Calculate energy per bit and battery cost of traffic metrics...")
       energy_bot_df = calc.calculate_throughput_energy_and_bot()
+      
+      # Compute battery cycles metrics
+      logging.info("Calculate battery cycles metrics...")
+      cycles_df = calc.calculate_battery_cycles()
+      
+      # Compute State of Health (SoH) metrics
+      logging.info("Calculate State of Health (SoH) metrics...")
+      soh_df = calc.calculate_soh()
       
       # Check if dataframes are empty
       if (throughput_df is None or throughput_df.empty) and (energy_df is None or energy_df.empty):
@@ -96,6 +135,22 @@ class DataTransformation:
         merged_df = pd.merge(
           merged_df,
           energy_bot_df[["device_id", "created_at", "energy_per_bit_tx_J", "energy_per_bit_rx_J", "energy_per_bit_avg_J", "BoT_mAh_per_Gbps"]],
+          on=["device_id", "created_at"], how="left"
+        )
+      
+      # Check if cycles_df is not empty before merging
+      if cycles_df is not None and not cycles_df.empty:
+        merged_df = pd.merge(
+          merged_df,
+          cycles_df[["device_id", "created_at", "charge_counter_uah", "delta_charge_uah", "discharge_uah", "cycles_est"]],
+          on=["device_id", "created_at"], how="left"
+        )
+      
+      # Check if soh_df is not empty before merging
+      if soh_df is not None and not soh_df.empty:
+        merged_df = pd.merge(
+          merged_df,
+          soh_df[["device_id", "created_at", "Q_mAh", "Ct_mAh", "soh_pct", "soh_smooth"]],
           on=["device_id", "created_at"], how="left"
         )
       
