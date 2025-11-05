@@ -81,7 +81,11 @@ class MetricsCalculation:
   
   def calculate_throughput_energy_and_bot(self) -> pd.DataFrame:
     '''
-    Function to calculate throughput based energy consumption.
+    Function to calculate throughput based energy consumption.\n
+    params:
+    - df: DataFrame containing raw data with battery and throughput metrics.
+    \nreturns:
+    - DataFrame with calculated throughput based energy consumption values.
     '''
     try:
       # Create a copy of dataframe
@@ -127,17 +131,114 @@ class MetricsCalculation:
     except Exception as e:
       raise CustomException(e, sys)
   
-  def calculate_soh(self):
+  def calculate_soh(self) -> pd.DataFrame:
     '''
-    Function to calculate State of Health (SoH) from raw data.
+    Function to calculate State of Health (SoH) from raw data.\n
+    params:
+    - df: DataFrame containing raw data with battery capacity metrics.
+    \nreturns:
+    - DataFrame with calculated SoH values.
     '''
-    pass
+    try:
+      # Create a copy of dataframe
+      new_df = self._base_guard(self.df)
+      # Check if dataframe is not empty
+      if new_df.empty or new_df is None:
+        return new_df
+      
+      # Make sure that charge_counter_uah exists
+      if "charge_counter_uah" not in new_df.columns:
+        logging.info("charge_counter_uah column not found in dataframe.")
+        new_df["soh_est"] = np.nan
+        return new_df
+      
+      # Calculate state of health
+      logging.info("Calculating State of Health (SoH)...")
+      
+      # Estimate design capacity per devices
+      design_cap = (
+        new_df.groupby("device_id")["charge_counter_uah"]
+        .transform("max")
+      )
+      
+      # Avoid division by zero
+      design_cap = design_cap.replace(0, np.nan)
+      new_df["design_capacity_uah"] = design_cap
+      
+      # SoH = current capacity / design capacity * 100%
+      new_df["soh_pct"] = (
+        (new_df["charge_counter_uah"] / new_df["design_capacity_uah"]) * 100
+      )
+      
+      # Clamp values
+      new_df["soh_pct"] = new_df["soh_pct"].clip(lower=0, upper=100)
+      
+      logging.info(
+        new_df[["device_id", "created_at", "charge_counter_uah", "design_capacity_uah", "soh_pct"]].head()
+      )
+      
+      # Return dataframe with SoH values
+      return new_df
+    except Exception as e:
+      raise CustomException(e, sys)
   
-  def calculate_battery_cycles(self):
+  def calculate_battery_cycles(self) -> pd.DataFrame:
     '''
-    Function to calculate battery cycles from raw data.
+    Function to calculate battery cycles from raw data.\n
+    params:
+    - df: DataFrame containing raw data with battery charge/discharge metrics.
+    \nreturns:
+    - DataFrame with calculated battery cycles values.
     '''
-    pass
+    try:
+      # Create a copy of dataframe
+      new_df = self._base_guard(self.df)
+      # Check if dataframe is not empty
+      if new_df.empty or new_df is None:
+        return new_df
+      
+      if "charge_counter_uah" not in new_df.columns:
+        logging.info("charge_counter_uah column not found in dataframe.")
+        new_df["battery_cycles"] = np.nan
+        return new_df
+      
+      # Estimate design capacity
+      design_cap = (
+        new_df.groupby("device_id")["charge_counter_uah"]
+        .transform("max")
+      )
+      design_cap = design_cap.replace(0, np.nan)
+      new_df["design_capacity_uah"] = design_cap
+      
+      # Delta charge per device
+      new_df["delta_charge_uah"] = new_df.groupby("device_id")["charge_counter_uah"].diff()
+      
+      # Take only negative discharge values
+      new_df["discharge_uah"] = (
+        -new_df["delta_charge_uah"].where(new_df["delta_charge_uah"] < 0, 0)
+      )
+      
+      # Calculate equivalent full cycles
+      new_df["cycle_increment"] = (
+        new_df["discharge_uah"] / new_df["design_capacity_uah"]
+      )
+      
+      # Replace non relevant NaN values with 0
+      new_df["cycle_increment"] = new_df["cycle_increment"].fillna(0)
+      
+      # Cycle accumulation per device
+      new_df["cycles_est"] = (
+        new_df.groupby("device_id")["cycle_increment"].cumsum()
+      )
+      
+      logging.info(
+        new_df[["device_id", "created_at", "charge_counter_uah", "design_capacity_uah", "discharge_uah", "cycles_est"]].head()
+      )
+      
+      # Return dataframe 
+      return new_df
+    except Exception as e:
+      raise CustomException(e, sys)
   
   def calculate_rul(self):
     '''
