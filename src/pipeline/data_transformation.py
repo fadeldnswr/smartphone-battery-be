@@ -10,6 +10,7 @@ import sys
 from src.logging.logging import logging
 from src.exception.exception import CustomException
 from src.service.metrics_calculation import MetricsCalculation
+from src.service.usage_calculation import UsageCalculation
 
 # Define data transformation class
 class DataTransformation:
@@ -88,6 +89,24 @@ class DataTransformation:
       
       logging.info("State of Health (SoH) calculation completed successfully.")
       return soh_df
+    except Exception as e:
+      raise CustomException(e, sys)
+  
+  def compute_usage_application(self, top_rank: int = 4) -> pd.DataFrame:
+    '''
+    Function to compute application usage statistics.\n
+    params:
+    - top_rank : int : Number of top applications to consider for usage statistics\n
+    returns:
+    - pd.DataFrame : DataFrame containing application usage statistics
+    '''
+    try:
+      logging.info("Computing application usage statistics...")
+      usage_data = UsageCalculation(df=self.data)
+      usage_df = usage_data.calculate_app_usage(top_rank=top_rank)
+      
+      logging.info("Application usage statistics calculation completed successfully.")
+      return usage_df
     except Exception as e:
       raise CustomException(e, sys)
   
