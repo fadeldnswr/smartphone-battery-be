@@ -38,3 +38,20 @@ class GraphsHistoryResponse(BaseModel):
   energy_points: List[EnergyConsumptionPoint]
   energy_per_bit_points: List[EnergyPerBitPoint]
   bot_points: List[BatteryCostOfTrafficPoint]
+
+# Define summary list model
+class SummaryMetrics(BaseModel):
+  energy_last_wh: float
+  avg_thr_last_mbps: float
+  avg_bot_last: float
+  avg_epb_last: float
+  energy_today_wh: float
+
+# Define summary metrics model
+class SummaryMetricsResponse(BaseModel):
+  message: str
+  device_id: str
+  window_start: int
+  window_end: int
+  sample_last: int
+  summary: List[SummaryMetrics]
