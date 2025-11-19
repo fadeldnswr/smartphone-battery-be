@@ -7,3 +7,8 @@ pandas
 numpy
 scikit-learn
 matplotlib
+tensorflow
+keras
+seaborn
+ipykernel
+psycopg2-binary 
