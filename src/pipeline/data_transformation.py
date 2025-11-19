@@ -6,6 +6,7 @@ This module handles data transformation operations for the pipeline.
 import pandas as pd
 import os
 import sys
+import numpy as np
 
 from src.logging.logging import logging
 from src.exception.exception import CustomException
@@ -175,5 +176,78 @@ class DataTransformation:
       
       logging.info("Metrics computation completed successfully.")
       return merged_df
+    except Exception as e:
+      raise CustomException(e, sys)
+  
+  def compute_monitoring_summary(self, window_hours: int = 1) -> pd.DataFrame:
+    '''
+    Function to compute monitoring summary over a specified time window.\n
+    params:
+    - window_hours : int : Time window in hours for summary computation\n
+    returns:
+    - pd.DataFrame : DataFrame containing monitoring summary
+    '''
+    try:
+      logging.info("Computing monitoring summary...")
+      metrics_df = self.compute_metrics()
+      
+      # Check if metrics_df is empty
+      if metrics_df is None or metrics_df.empty:
+        return pd.DataFrame()
+      
+      # Copy metrics_df to summary_df
+      df = metrics_df.copy()
+      
+      # Check if created_at column exists
+      if "created_at" not in df.columns:
+        logging.error("created_at column is missing in the data.")
+        return pd.DataFrame()
+      df["created_at"] = pd.to_datetime(df["created_at"]) # Ensure created_at is in datetime format
+      df = df.sort_values(by="created_at") # Sort by created_at
+      
+      # Create list of summary metrics
+      summary: list = []
+      for dev, g in df.groupby("device_id"):
+        if g.empty:
+          continue
+        g = g.sort_values(by="created_at")
+        last_time = g["created_at"].max()
+        
+        # Create window for summary calculation
+        window_start = last_time - pd.Timedelta(hours=window_hours)
+        window_data = g[(g["created_at"] > window_start) & (g["created_at"] <= last_time)]
+        if window_data.empty:
+          continue
+        
+        # Today summary
+        day_start = last_time.normalize()
+        today_mask = (g["created_at"] >= day_start) & (g["created_at"] <= last_time)
+        today = g.loc[today_mask]
+        
+        # Append summary metrics to list
+        summary.append({
+          "device_id": dev,
+          "window_start": window_start,
+          "window_end": last_time,
+          "sample_last": len(window_data),
+          
+          # Last 1 hour metrics
+          "energy_last_wh": window_data["energy_wh"].sum(skipna=True) 
+          if "energy_wh" in window_data.columns else np.nan,
+          "avg_thr_last_mbps": window_data["throughput_total_mbps"].mean(skipna=True) 
+          if "throughput_total_mbps" in window_data.columns else np.nan,
+          "avg_bot_last": window_data["BoT_mAh_per_Gbps"].mean(skipna=True)
+          if "BoT_mAh_per_Gbps" in window_data.columns else np.nan,
+          "avg_epb_last": window_data["energy_per_bit_avg_J"].mean(skipna=True)
+          if "energy_per_bit_avg_J" in window_data.columns else np.nan,
+          
+          # Total energy today
+          "energy_today_wh": today["energy_wh"].sum(skipna=True)
+          if (not today.empty and "energy_wh" in today.columns) else np.nan,
+        })
+      summary_df = pd.DataFrame(summary)
+      logging.info("Monitoring summary computation completed successfully.")
+      logging.info(f"Summary DataFrame shape: {summary_df.shape}")
+      return summary_df
     except Exception as e:
       raise CustomException(e, sys)

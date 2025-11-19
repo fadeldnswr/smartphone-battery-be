@@ -10,7 +10,7 @@ from src.logging.logging import logging
 from src.api.model.graphs_model import (
   GraphsHistoryResponse, ThroughputPoint, 
   EnergyConsumptionPoint, BatteryCostOfTrafficPoint,
-  EnergyPerBitPoint
+  EnergyPerBitPoint, SummaryMetricsResponse
   )
 from src.pipeline.data_ingestion import DataIngestion
 from src.pipeline.data_transformation import DataTransformation
@@ -129,4 +129,13 @@ async def get_throughput_history(
     }
   except Exception as e:
     logging.error(f"Error in get_throughput_history: {e}")
+    raise HTTPException(status_code=500, detail=str(e))
+
+# Define summary metrics route
+@router.get("/summary", status_code=200, response_model=SummaryMetricsResponse)
+async def get_summary_metrics():
+  try:
+    pass
+  except Exception as e:
+    logging.error(f"Error in get_summary_metrics: {e}")
     raise HTTPException(status_code=500, detail=str(e))
