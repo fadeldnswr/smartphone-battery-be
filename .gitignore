@@ -17,6 +17,7 @@ coverage/
 .coverage
 *.cover
 *.py,cover
+models
 
 # Virtual Environments
 .venv/
