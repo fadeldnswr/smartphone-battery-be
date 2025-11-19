@@ -1,5 +1,86 @@
-.venv
+# ============================
+# PYTHON / VENV
+# ============================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pkl
+*.egg-info/
+*.egg
+build/
+dist/
+.eggs/
+.mypy_cache/
+.pytest_cache/
+coverage/
+.coverage
+*.cover
+*.py,cover
+
+# Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+pip-wheel-metadata/
+.python-version
+
+# ============================
+# JUPYTER NOTEBOOK
+# ============================
+.ipynb_checkpoints/
+notebook/exports/
+notebook/data/*.csv
+notebook/data/*.parquet
+notebook/data/*.xlsx
+.notebook/
+
+# Ignore temporary checkpoint files
+*.ipynb_checkpoint
+*checkpoint.ipynb
+
+# ============================
+# FASTAPI / BACKEND
+# ============================
+# logs
+backend/logs/
+backend/*.log
+*.log
+
+# Uploaded files or tmp output
+backend/tmp/
+tmp/
+
+# ============================
+# IDE / EDITOR
+# ============================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ============================
+# ENV VARIABLES
+# ============================
 .env
-__pycache__
-.vscode
-logs
+*.env
+.env.*
+
+# ============================
+# OS FILES
+# ============================
+.DS_Store
+Thumbs.db
+
+# ============================
+# MISC
+# ============================
+# ignore cache artifacts
+.cache/
+logs/
+exports/
+
+# ============================
+# DO NOT IGNORE PACKAGE CODE
+# ============================
