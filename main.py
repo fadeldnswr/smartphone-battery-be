@@ -3,7 +3,7 @@ Main file for smartphone battery health prediction thesis project
 """
 
 from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware  
+from fastapi.middleware.cors import CORSMiddleware 
 from typing import Dict
 from src.api.routes import data_retrieval, data_visualization, graphs_visualization, battery_metrics
 

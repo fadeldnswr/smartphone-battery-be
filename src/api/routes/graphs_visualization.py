@@ -10,7 +10,7 @@ from src.logging.logging import logging
 from src.api.model.graphs_model import (
   GraphsHistoryResponse, ThroughputPoint, 
   EnergyConsumptionPoint, BatteryCostOfTrafficPoint,
-  EnergyPerBitPoint, SummaryMetricsResponse
+  EnergyPerBitPoint, SummaryMetricsResponse, SummaryMetrics
   )
 from src.pipeline.data_ingestion import DataIngestion
 from src.pipeline.data_transformation import DataTransformation
@@ -133,9 +133,54 @@ async def get_throughput_history(
 
 # Define summary metrics route
 @router.get("/summary", status_code=200, response_model=SummaryMetricsResponse)
-async def get_summary_metrics():
+async def get_summary_metrics(device_id: str = Query(..., description="Device ID")) -> SummaryMetricsResponse:
   try:
-    pass
+    df_raw = DataIngestion(table_name="raw_metrics", device_id=device_id).extract_data_from_db()
+    # Check if df_raw is empty
+    if df_raw.empty:
+      return SummaryMetricsResponse(
+        message="No data found for the device",
+        device_id=device_id,
+        window_start=None,
+        window_end=None,
+        sample_last=0,
+        summary=None
+      )
+    
+    # Compute metrics and summary
+    transformer = DataTransformation(data=df_raw)
+    summary_metrics = transformer.compute_monitoring_summary()
+    
+    summary_row = summary_metrics.loc[summary_metrics["device_id"] == device_id]
+    # Check if summary row is empty
+    if summary_row.empty:
+      return SummaryMetricsResponse(
+        message="No summary metrics found for the device",
+        device_id=device_id,
+        window_start=None,
+        window_end=None,
+        sample_last=0,
+        summary=None
+      )
+    
+    # Get the first row as summary
+    summary = summary_row.iloc[0]
+    
+    # Return metrics
+    return SummaryMetricsResponse(
+      message="Summary metrics retrieved successfully",
+      device_id=device_id,
+      window_start=summary["window_start"],
+      window_end=summary["window_end"],
+      sample_last=summary["sample_last"],
+      summary=SummaryMetrics(
+        energy_last_wh=summary["energy_last_wh"],
+        avg_thr_last_mbps=summary["avg_thr_last_mbps"],
+        avg_bot_last=summary["avg_bot_last"],
+        avg_epb_last=summary["avg_epb_last"],
+        energy_today_wh=summary["energy_today_wh"]
+      )
+    )
   except Exception as e:
     logging.error(f"Error in get_summary_metrics: {e}")
     raise HTTPException(status_code=500, detail=str(e))

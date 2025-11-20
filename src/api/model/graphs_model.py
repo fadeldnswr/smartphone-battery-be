@@ -51,7 +51,7 @@ class SummaryMetrics(BaseModel):
 class SummaryMetricsResponse(BaseModel):
   message: str
   device_id: str
-  window_start: int
-  window_end: int
+  window_start: datetime | None
+  window_end: datetime | None
   sample_last: int
-  summary: List[SummaryMetrics]
+  summary: SummaryMetrics | None
