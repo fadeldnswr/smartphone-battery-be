@@ -16,20 +16,36 @@ from src.pipeline.data_transformation import DataTransformation
 from tensorflow.keras.models import load_model
 from typing import Dict, Any
 from dotenv import load_dotenv
-load_dotenv()
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+ENV_PATH = os.path.join(BASE_DIR, ".env")
+load_dotenv(dotenv_path=ENV_PATH)
 
 # Define model directory
 MODEL_DIR = os.getenv("MODEL_DIR")
 
+if not MODEL_DIR:
+    raise RuntimeError("MODEL_DIR is not set. Check your .env and ENV_PATH configuration.")
+
+model_path = os.path.join(f"{MODEL_DIR}/latest", "model.keras")
+scaler_path = os.path.join(f"{MODEL_DIR}/latest", "scaler.pkl")
+
+if not os.path.exists(model_path):
+    raise RuntimeError(f"Model file not found at {model_path}")
+
+if not os.path.exists(scaler_path):
+    raise RuntimeError(f"Scaler file not found at {scaler_path}")
+
 # Load model
-model = load_model(f"{MODEL_DIR}/model.keras", compile=False)
+model = load_model(model_path, compile=False)
 
 # Open scaler
-with open(f"{MODEL_DIR}/scaler.pkl", "rb") as file:
+with open(scaler_path, "rb") as file:
   scaler = pickle.load(file=file)
 
 # Open JSON file configuration
-with open(f"{MODEL_DIR}/config.json", "r") as file:
+config_path = os.path.join(f"{MODEL_DIR}/latest", "config.json")
+with open(config_path, "r") as file:
   model_config = json.load(file)
 
 # Feature and target columns
