@@ -41,8 +41,8 @@ def add_aging_features(df: pd.DataFrame, win_fast: int = 6, win_slow: int = 48) 
         g["temp_max_win"] = 0.0
       
       # Throughput and energy EMA
-      if "throughput_total_gb" in g.columns:
-        g["tp_ema"] = g["throughput_total_gb"].ewm(span=win_fast, adjust=False).mean()
+      if "throughput_total_mbps" in g.columns:
+        g["tp_ema"] = g["throughput_total_mbps"].ewm(span=win_fast, adjust=False).mean()
       else:
         g["tp_ema"] = 0.0
       

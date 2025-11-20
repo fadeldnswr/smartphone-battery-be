@@ -28,7 +28,7 @@ BATTERY_CAPACITY_SPEC = {
 }
 
 # Column names in the dataset
-TIMESTAMP_COL = "timestamp"
+TIMESTAMP_COL = "created_at"
 DEVICE_COL = "device_id"
 
 # Target columns
@@ -39,12 +39,14 @@ EFC_COL = "EFC"
 
 # Feature columns used for model training
 FEATURE_COLS = [
-  "SoH_filled",
-  "throughput_mbps",
-  "energy_per_bit",
-  "temp",
-  "EFC",
+  "batt_voltage_v", "batt_temp_c",
+  "throughput_total_mbps", "energy_per_bit_avg_J",
+  "EFC", "soh_trend", "efc_delta",
+  "temp_ema", "temp_max_win", "tp_ema", "epb_ema",
+  "batt_voltage_v_z", "batt_temp_c_z",
+  "throughput_total_mbps_z", "energy_per_bit_avg_J_z",
+  "SoH_filled_z", "EFC_z", "soh_trend_z", 'BoT_mAh_per_Gbps'
 ]
 
-WINDOW_SIZE = 48 # Number of time steps in each input sequence
+WINDOW_SIZE = 24 # Number of time steps in each input sequence
 SOH_THRESHOLD_EOL = 0.7 # End-of-life threshold for SoH

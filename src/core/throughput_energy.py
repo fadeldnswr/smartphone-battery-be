@@ -117,8 +117,8 @@ def calculate_throughput_energy_and_bot(df: pd.DataFrame) -> pd.DataFrame:
     
     # Merge dataframes on device and timestamp
     merged = pd.merge(
-      thr[[DEVICE_COL, TIMESTAMP_COL, "throughput_total_bps"]],
-      eng[[DEVICE_COL, TIMESTAMP_COL, "batt_voltage_v", "energy_wh"]],
+      thr[[DEVICE_COL, TIMESTAMP_COL, "throughput_total_bps", "throughput_total_mbps"]],
+      eng[[DEVICE_COL, TIMESTAMP_COL, "batt_voltage_v", "energy_wh", "batt_temp_c"]],
       on=[DEVICE_COL, TIMESTAMP_COL],
       how="inner",
     ).sort_values([DEVICE_COL, TIMESTAMP_COL])
