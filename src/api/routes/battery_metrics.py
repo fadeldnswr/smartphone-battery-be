@@ -55,7 +55,7 @@ async def get_battery_metrics(
     # Take last record of battery cycles and State of Health (SoH)
     df_metrics["ts_utc"] = pd.to_datetime(df_metrics["ts_utc"])
     df_metrics = df_metrics.sort_values("ts_utc")
-    latest_data = df_metrics.iloc[-1].to_dict()
+    latest_data = df_metrics.iloc[-1]
     
     # Return battery metrics response
     return {
@@ -64,18 +64,18 @@ async def get_battery_metrics(
         {
           "device_id": latest_data["device_id"],
           "created_at": latest_data["created_at"],
-          "Q_mAh": float(latest_data["Q_mAh"]),
-          "Ct_mAh": float(latest_data["Ct_mAh"]),
-          "soh_pct": float(latest_data["soh_pct"]),
+          "Q_mAh": float(latest_data.get("Q_mAh", 0)),
+          "Ct_mAh": float(latest_data.get("Ct_mAh", 0)),
+          "soh_pct": float(latest_data.get("soh_pct", 0)),
         }
       ],
       "cycles_data": [
         {
           "device_id": latest_data["device_id"],
           "created_at": latest_data["created_at"],
-          "delta_charge_uah": float(latest_data["delta_charge_uah"]),
-          "discharge_uah": float(latest_data["discharge_uah"]),
-          "cycles_est": float(latest_data["cycles_est"]),
+          "delta_charge_uah": float(latest_data.get("delta_Q_mAh", 0)),
+          "discharge_uah": float(latest_data.get("discharge_mAh", 0)),
+          "cycles_est": float(latest_data.get("EFC", 0)),
         }
       ]
     }
