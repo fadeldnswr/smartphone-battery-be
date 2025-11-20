@@ -21,8 +21,16 @@ def add_aging_features(df: pd.DataFrame, win_fast: int = 6, win_slow: int = 48) 
   '''
   try:
     df = df.copy()
+    if "device_id" not in df.columns or "created_at" not in df.columns:
+      return df
     df = df.sort_values([DEVICE_COL, TIMESTAMP_COL])
-    df["SoH_filled"] = df["SoH_filled"].ffill().bfill()
+
+    if "soh_smooth" in df.columns:
+      df["SoH_filled"] = df["soh_smooth"].ffill().bfill()
+    elif "soh_pct" in df.columns:
+      df["SoH_filled"] = (df["soh_pct"] / 100.0).ffill().bfill()
+    else:
+      df["SoH_filled"] = 0.0
     
     # Define per-device processing function
     def _per_dev(g: pd.DataFrame) -> pd.DataFrame:

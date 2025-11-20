@@ -26,8 +26,10 @@ def _hampel(s: pd.Series, k: int = 7, nsigma: float = 5.0):
     thresh = nsigma * 1.4826 * mad
     outlier = (s - med).abs() > thresh
     s[outlier] = np.nan
+    return s
   except Exception as e:
     print(f"Error in _hampel: {e}")
+    return s
 
 # Define function to compute SoH cycles
 def calculate_soh_cycles(
@@ -72,13 +74,13 @@ def calculate_soh_cycles(
         raw = df["charge_counter_uah"]
       else:
         raw = df["charge_counter"] 
-        df["Q_mAh"] = raw / 1000.0
-        df["Q_mAh_raw"] = df["Q_mAh"]
-        df["Q_mAh"] = _hampel(df["Q_mAh"], k=7, nsigma=5.0)
+      df["Q_mAh"] = pd.to_numeric(raw, errors="coerce") / 1000.0
+      df["Q_mAh_raw"] = df["Q_mAh"]
+      df["Q_mAh"] = _hampel(df["Q_mAh"], k=7, nsigma=5.0)
         
-        # If median Q_mAh negatif, invert values
-        if df["Q_mAh"].dropna().median() < 0:
-          df["Q_mAh"] = -df["Q_mAh"]
+      # If median Q_mAh negatif, invert values
+      if df["Q_mAh"].dropna().median() < 0:
+        df["Q_mAh"] = -df["Q_mAh"]
       
     elif use_current_avg:
       df["batt_current_a"] = df["current_avg_ua"] / 1e6
@@ -165,3 +167,4 @@ def calculate_soh_cycles(
     return df
   except Exception as e:
     print(f"Error in calculate_soh_cycles: {e}")
+    return pd.DataFrame()

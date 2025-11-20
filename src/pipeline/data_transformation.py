@@ -12,6 +12,8 @@ from src.logging.logging import logging
 from src.exception.exception import CustomException
 from src.service.metrics_calculation import MetricsCalculation
 from src.service.usage_calculation import UsageCalculation
+from src.core.aging_features import add_aging_features
+from src.core.feature_engineering import add_per_device_zscore
 
 # Define data transformation class
 class DataTransformation:
@@ -139,43 +141,72 @@ class DataTransformation:
       soh_df = calc.calculate_soh()
       
       # Check if dataframes are empty
-      if (throughput_df is None or throughput_df.empty) and (energy_df is None or energy_df.empty):
+      for name, df in [
+        ("throughput_df", throughput_df),
+        ("energy_df", energy_df),
+        ("energy_bot_df", energy_bot_df),
+        ("cycles_df", cycles_df),
+        ("soh_df", soh_df),
+      ]: 
+        if df is None:
+          logging.warning(f"{name} is None.")
+        else:
+          logging.info(f"{name} shape: {df.shape}")
+      
+      candidates = [throughput_df, energy_df, energy_bot_df, cycles_df, soh_df]
+      non_empty = [df for df in candidates if df is not None and not df.empty]
+      
+      if not non_empty:
+        logging.warning("All computed dataframes are empty. Returning empty dataframe.")
         return pd.DataFrame()
+      
+      
+      # Start merging dataframes
+      merged = non_empty[0].copy()
       
       # Merge dataframes on common columns
       logging.info("Merging throughput and energy data...")
-      merged_df = pd.merge(
-        throughput_df, 
+      merged = merged.merge(
         energy_df[["device_id", "created_at", "energy_wh", "batt_voltage_v"]], 
-        on=["device_id", "created_at"], how="left"
+        on=["device_id", "created_at"], 
+        how="left"
       )
       
       # Check if energy_bot_df is not empty before merging
       if energy_bot_df is not None and not energy_bot_df.empty:
-        merged_df = pd.merge(
-          merged_df,
+        merged = merged.merge(
           energy_bot_df[["device_id", "created_at", "energy_per_bit_tx_J", "energy_per_bit_rx_J", "energy_per_bit_avg_J", "BoT_mAh_per_Gbps"]],
-          on=["device_id", "created_at"], how="left"
+          on=["device_id", "created_at"], 
+          how="left"
         )
       
       # Check if cycles_df is not empty before merging
       if cycles_df is not None and not cycles_df.empty:
-        merged_df = pd.merge(
-          merged_df,
-          cycles_df[["device_id", "created_at", "charge_counter_uah", "delta_charge_uah", "discharge_uah", "cycles_est"]],
-          on=["device_id", "created_at"], how="left"
+        merged = merged.merge(
+          cycles_df[["device_id", "created_at", "Q_mAh", "delta_Q_mAh", "discharge_mAh", "EFC"]],
+          on=["device_id", "created_at"], 
+          how="left"
         )
       
       # Check if soh_df is not empty before merging
       if soh_df is not None and not soh_df.empty:
-        merged_df = pd.merge(
-          merged_df,
-          soh_df[["device_id", "created_at", "Q_mAh", "Ct_mAh", "soh_pct", "soh_smooth"]],
-          on=["device_id", "created_at"], how="left"
+        merged = merged.merge(
+          soh_df[["device_id", "created_at", "soh_pct", "soh_smooth", "Ct_mAh"]],
+          on=["device_id", "created_at"],
+          how="left"
         )
-      
+
+        # Add aging features calculation
+        logging.info("Adding aging features...")
+        merged = add_aging_features(merged)
+        
+        # Apply z-score normalization to soh_smooth
+        logging.info("Applying z-score normalization to soh_smooth...")
+        merged = add_per_device_zscore(merged)
+        
       logging.info("Metrics computation completed successfully.")
-      return merged_df
+      logging.info(f"Merged DataFrame columns: {merged.columns.tolist()}")
+      return merged
     except Exception as e:
       raise CustomException(e, sys)
   
