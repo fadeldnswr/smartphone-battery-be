@@ -1,0 +1,136 @@
+'''
+Module for prediction controller functions
+'''
+
+import os
+import sys
+import numpy as np
+import json
+import pickle
+
+from src.logging.logging import logging
+from src.exception.exception import CustomException
+from src.pipeline.data_ingestion import DataIngestion
+from src.pipeline.data_transformation import DataTransformation
+
+from tensorflow.keras.models import load_model
+from typing import Dict, Any
+from dotenv import load_dotenv
+load_dotenv()
+
+# Define model directory
+MODEL_DIR = os.getenv("MODEL_DIR")
+
+# Load model
+model = load_model(f"{MODEL_DIR}/model.keras", compile=False)
+
+# Open scaler
+with open(f"{MODEL_DIR}/scaler.pkl", "rb") as file:
+  scaler = pickle.load(file=file)
+
+# Open JSON file configuration
+with open(f"{MODEL_DIR}/config.json", "r") as file:
+  model_config = json.load(file)
+
+# Feature and target columns
+win_size = model_config["window_size"]
+feature_cols = model_config["feature_cols"]
+target_col = model_config["target_col"]
+
+# RUL configuration
+rul_config = model_config["rul_config"]
+k_global = model_config["rul_config"]["k_global"]
+soh_eol = model_config["rul_config"]["soh_eol"] 
+hours_per_cycle = model_config["rul_config"]["hours_per_cycle"]
+
+# Define function to estimate RUL from SoH
+def estimate_rul_from_soh(soh_pred: float) -> Dict[str, Any]:
+  '''
+  Estimate RUL in months from predicted SoH percentage.\n
+  params:
+  - soh_pred (float): Predicted State of Health in percentage (0-100).
+  returns:
+  - dict: Dictionary with estimated RUL in months.
+  '''
+  try:
+    delta_soh = soh_pred - soh_eol
+    rul_cycles = max(delta_soh / k_global, 0)
+    
+    # Convert RUL cycles to months
+    rul_hours = rul_cycles * hours_per_cycle
+    rul_days = rul_hours / 24.0
+    rul_months = rul_days / 30.0
+    rul_years = rul_days / 365.0 
+    
+    # Return RUL estimates
+    return {
+      "rul_cycles": rul_cycles,
+      "rul_hours": rul_hours,
+      "rul_months": rul_months,
+      "rul_years": rul_years
+    }
+  except Exception as e:
+    logging.error(f"Error in estimate_rul_from_soh: {e}")
+    raise CustomException(e, sys)
+
+# Define function to run prediction pipeline
+def run_prediction_pipeline(device_id: str) -> Dict[str, Any]:
+  '''
+  Function to run the prediction pipeline for a given device ID.\n
+  params:
+  - device_id (str): Device ID for which to run the prediction.
+  returns:
+  - dict: Dictionary with prediction results.
+  '''
+  try:
+    # Load raw metrics
+    df_raw = DataIngestion(table_name="raw_metrics", device_id=device_id).extract_data_from_db()
+    logging.info(f"RAW COLUMNS: {df_raw.columns.tolist()}")
+    logging.info(f"RAW HEAD:\n{df_raw.head(5)}")
+
+    # Check if df_raw is empty
+    if df_raw is None or len(df_raw) == 0:
+      raise ValueError("No data found for the device.")
+    
+    # Compute metrics
+    df_metrics = DataTransformation(data=df_raw).compute_metrics()
+    
+    logging.info(f"Metrics data shape {df_metrics.shape} for device {device_id}")
+    
+    # Ensure data is sorted by timestamp
+    df_metrics = df_metrics.sort_values(by="created_at")
+    
+    # CHeck for missing cols
+    missing_cols = [c for c in feature_cols if c not in df_metrics.columns]
+    if missing_cols:
+      raise ValueError(f"Missing feature columns in metrics data: {missing_cols}")
+    
+    # Build sliding windows
+    feat = df_metrics[feature_cols].tail(win_size)
+    if len(feat) < win_size:
+      raise ValueError(f"Not enough data to form a complete window: " f"need {win_size}, got {len(feat)}")
+    
+    # Scale features
+    X = feat.values.reshape(1, win_size, len(feature_cols))
+    X_scaled = scaler.transform(X.reshape(-1, X.shape[-1])).reshape(X.shape)
+    
+    # State of health prediction
+    soh_pred = float(model.predict(X_scaled)[0][0])
+    soh_pred_pct = soh_pred * 100.0  # Convert to percentage
+    
+    # Estimate RUL from State of Health prediction
+    rul_dict = estimate_rul_from_soh(soh_pred=soh_pred)
+    
+    # Return prediction results
+    return {
+      "message": "Prediction successful",
+      "device_id": device_id,
+      "soh_pred_pct": round(soh_pred_pct, 2),
+      "soh_pred": float(round(soh_pred, 2)),
+      "rul_cycles": round(rul_dict["rul_cycles"], 2),
+      "rul_months": round(min(rul_dict["rul_months"], 60.0), 1),
+      "rul_hours": round(rul_dict["rul_hours"], 2)
+    }
+  except Exception as e:
+    logging.error(f"Error in run_prediction_pipeline: {e}")
+    raise CustomException(e, sys)
