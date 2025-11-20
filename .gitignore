@@ -17,7 +17,6 @@ coverage/
 .coverage
 *.cover
 *.py,cover
-models
 
 # Virtual Environments
 .venv/
@@ -31,7 +30,6 @@ pip-wheel-metadata/
 # JUPYTER NOTEBOOK
 # ============================
 .ipynb_checkpoints/
-notebook/exports/
 notebook/data/*.csv
 notebook/data/*.parquet
 notebook/data/*.xlsx
@@ -80,7 +78,6 @@ Thumbs.db
 # ignore cache artifacts
 .cache/
 logs/
-exports/
 
 # ============================
 # DO NOT IGNORE PACKAGE CODE

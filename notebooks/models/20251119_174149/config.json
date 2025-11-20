@@ -1,0 +1,27 @@
+{
+  "window_size": 7,
+  "feature_cols": [
+    "batt_voltage_v",
+    "batt_temp_c",
+    "throughput_total_gb",
+    "energy_per_bit_avg_J",
+    "EFC",
+    "soh_trend",
+    "efc_delta",
+    "temp_ema",
+    "temp_max_win",
+    "tp_ema",
+    "epb_ema",
+    "batt_voltage_v_z",
+    "batt_temp_c_z",
+    "throughput_total_gb_z",
+    "energy_per_bit_avg_J_z",
+    "SoH_filled_z",
+    "EFC_z",
+    "soh_trend_z",
+    "BoT_mAh_per_Gbps"
+  ],
+  "target_col": "SoH_filled",
+  "scaler_type": "StandardScaler",
+  "model_version": "20251119_174149"
+}
