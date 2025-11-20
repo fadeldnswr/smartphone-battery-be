@@ -77,7 +77,4 @@ Thumbs.db
 # ignore cache artifacts
 .cache/
 logs/
-
-# ============================
-# DO NOT IGNORE PACKAGE CODE
-# ============================
+jobs/
