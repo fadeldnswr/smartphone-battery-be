@@ -4,6 +4,7 @@ This module defines data flow from smartphone devices to the backend server.
 '''
 
 import pandas as pd
+import numpy as np
 import os
 import sys
 
@@ -50,34 +51,66 @@ async def get_battery_metrics(
     
     # Create datetime column
     df_metrics["created_at"] = pd.to_datetime(df_metrics["created_at"])
-    df_metrics = df_metrics.sort_values("created_at")
+    if "ts_utc" in df_metrics.columns:
+      df_metrics["ts_utc"] = pd.to_datetime(df_metrics["ts_utc"])
+      df_metrics = df_metrics.sort_values("ts_utc")
+    else:
+      df_metrics = df_metrics.sort_values("created_at")
     
-    # Take last record of battery cycles and State of Health (SoH)
-    df_metrics["ts_utc"] = pd.to_datetime(df_metrics["ts_utc"])
-    df_metrics = df_metrics.sort_values("ts_utc")
-    latest_data = df_metrics.iloc[-1]
+    # Create list of numerical cols for data sanitation
+    numerical_cols = [
+      "Q_mAh", "Ct_mAh", "soh_pct", "soh_smooth", 
+      "delta_Q_mAh", "discharge_mAh", "EFC"
+    ]
+    required_cols = ["device_id", "created_at"] + numerical_cols
+    available_soh_cols = [col for col in required_cols if col in df_metrics.columns]
+    df_soh = df_metrics[available_soh_cols].copy()
     
+    # Clean inf and NaN
+    df_soh = df_soh.replace([np.inf, -np.inf], np.nan)
+    if "soh_pct" in df_soh.columns:
+      df_soh = df_soh.dropna(subset=["soh_pct"])
+    
+    for col in ["Q_mAh", "Ct_mAh"]:
+      if col in df_soh.columns:
+        df_soh[col] = df_soh[col].fillna(0.0)
+    
+    df_soh = df_soh.tail(1000)
+    
+    # Check if soh_df is empty
+    if df_soh.empty:
+      return {
+        "device_id": device_id,
+        "soh_data": [],
+        "cycles_data": [],
+      }
+    
+    
+    # Take 100 last SoH data points
+    soh_data = []
+    for _, row in df_soh.iterrows():
+      soh_data.append({
+        "device_id": row["device_id"],
+        "created_at": row["created_at"],
+        "Q_mAh": float(row["Q_mAh"]) if "Q_mAh" in row else 0,
+        "Ct_mAh": float(row["Ct_mAh"]) if "Ct_mAh" in row else 0 ,
+        "soh_pct": float(row["soh_pct"]),
+      })
+    
+    # Take latest data from metrics
+    latest = df_metrics.iloc[-1]
+    cycles_data = [{
+      "device_id": latest["device_id"],
+      "created_at": latest["created_at"].isoformat() if pd.notna(latest["created_at"]) else None,
+      "delta_charge_uah": float(latest.get("delta_Q_mAh", 0.0)),
+      "discharge_uah": float(latest.get("discharge_mAh", 0.0)),
+      "cycles_est": float(latest.get("EFC", 0.0)),
+    }]
     # Return battery metrics response
     return {
       "device_id": device_id,
-      "soh_data": [
-        {
-          "device_id": latest_data["device_id"],
-          "created_at": latest_data["created_at"],
-          "Q_mAh": float(latest_data.get("Q_mAh", 0)),
-          "Ct_mAh": float(latest_data.get("Ct_mAh", 0)),
-          "soh_pct": float(latest_data.get("soh_pct", 0)),
-        }
-      ],
-      "cycles_data": [
-        {
-          "device_id": latest_data["device_id"],
-          "created_at": latest_data["created_at"],
-          "delta_charge_uah": float(latest_data.get("delta_Q_mAh", 0)),
-          "discharge_uah": float(latest_data.get("discharge_mAh", 0)),
-          "cycles_est": float(latest_data.get("EFC", 0)),
-        }
-      ]
+      "soh_data": soh_data,
+      "cycles_data": cycles_data,
     }
   except Exception as e:
     raise HTTPException(status_code=500, detail=f"Error retrieving battery metrics: {e}")
