@@ -12,6 +12,7 @@ from src.logging.logging import logging
 from src.exception.exception import CustomException
 from src.pipeline.data_ingestion import DataIngestion
 from src.pipeline.data_transformation import DataTransformation
+from src.api.model.prediction_model import PredictionResponse
 
 from tensorflow.keras.models import load_model
 from typing import Dict, Any
@@ -90,7 +91,7 @@ def estimate_rul_from_soh(soh_pred: float) -> Dict[str, Any]:
     raise CustomException(e, sys)
 
 # Define function to run prediction pipeline
-def run_prediction_pipeline(device_id: str) -> Dict[str, Any]:
+def run_prediction_pipeline(device_id: str) -> PredictionResponse:
   '''
   Function to run the prediction pipeline for a given device ID.\n
   params:
@@ -110,43 +111,58 @@ def run_prediction_pipeline(device_id: str) -> Dict[str, Any]:
     
     # Compute metrics
     df_metrics = DataTransformation(data=df_raw).compute_metrics()
-    
     logging.info(f"Metrics data shape {df_metrics.shape} for device {device_id}")
     
-    # Ensure data is sorted by timestamp
-    df_metrics = df_metrics.sort_values(by="created_at")
+    # Ensure soh true column exists
+    soh_true_col = "soh_smooth" if "soh_smooth" in df_metrics.columns else "soh_pct"
     
-    # CHeck for missing cols
-    missing_cols = [c for c in feature_cols if c not in df_metrics.columns]
-    if missing_cols:
-      raise ValueError(f"Missing feature columns in metrics data: {missing_cols}")
+    # Build sliding windows for prediction
+    values = df_metrics[feature_cols].values
+    n = len(values)
     
-    # Build sliding windows
-    feat = df_metrics[feature_cols].tail(win_size)
-    if len(feat) < win_size:
-      raise ValueError(f"Not enough data to form a complete window: " f"need {win_size}, got {len(feat)}")
+    # Define list of sliding windows
+    windows = []
+    timestamps = []
+    soh_true_list = []
     
-    # Scale features
-    X = feat.values.reshape(1, win_size, len(feature_cols))
+    # Create sliding window algorithm
+    for i in range(win_size, n):
+      win = values[i - win_size : i]
+      windows.append(win)
+      timestamps.append(df_metrics["created_at"].iloc[i])
+      soh_true_list.append(float(df_metrics[soh_true_col].iloc[i]) * 100.0)
+    
+    # Scaled input features
+    X = np.array(windows)
     X_scaled = scaler.transform(X.reshape(-1, X.shape[-1])).reshape(X.shape)
+    soh_pred_arr = model.predict(X_scaled).reshape(-1) * 100.0
     
-    # State of health prediction
-    soh_pred = float(model.predict(X_scaled)[0][0])
-    soh_pred_pct = soh_pred * 100.0  # Convert to percentage
+    # Last point for summary
+    soh_pred_last = float(soh_pred_arr[-1]) / 100
+    soh_pred_pct_last = float(soh_pred_arr[-1])
     
-    # Estimate RUL from State of Health prediction
-    rul_dict = estimate_rul_from_soh(soh_pred=soh_pred)
+    # Estimate remaining useful life from soh prediction
+    rul_dict = estimate_rul_from_soh(soh_pred=soh_pred_last)
     
-    # Return prediction results
-    return {
-      "message": "Prediction successful",
-      "device_id": device_id,
-      "soh_pred_pct": round(soh_pred_pct, 2),
-      "soh_pred": float(round(soh_pred, 2)),
-      "rul_cycles": round(rul_dict["rul_cycles"], 2),
-      "rul_months": round(min(rul_dict["rul_months"], 60.0), 1),
-      "rul_hours": round(rul_dict["rul_hours"], 2)
-    }
+    # Define soh series
+    soh_series = []
+    for t, soh_t, soh_p in zip(timestamps, soh_true_list, soh_pred_arr):
+      soh_series.append({
+        "created_at": t,
+        "soh_true": float(soh_t),
+        "soh_pred": float(soh_p)
+      })
+    
+    return PredictionResponse(
+      message="Prediction successful",
+      device_id=device_id,
+      soh_pred_pct=round(soh_pred_pct_last, 1),
+      soh_pred=float(round(soh_pred_last, 4)),
+      rul_cycles=round(rul_dict["rul_cycles"], 1),
+      rul_months=round(rul_dict["rul_months"], 1),
+      rul_hours=round(rul_dict["rul_hours"], 1),
+      soh_series=soh_series
+    )
   except Exception as e:
     logging.error(f"Error in run_prediction_pipeline: {e}")
     raise CustomException(e, sys)
