@@ -15,7 +15,7 @@ from src.api.controller.prediction_controller import run_prediction_pipeline
 router = APIRouter()
 
 # Define prediction endpoint
-@router.get("/", status_code=200, response_model=PredictionResponse)
+@router.get("/soh", status_code=200, response_model=PredictionResponse)
 async def get_prediction(device_id: str = Query(..., description="Device ID")) -> PredictionResponse:
   try:
     result = run_prediction_pipeline(device_id=device_id)
