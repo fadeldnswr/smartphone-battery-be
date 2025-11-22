@@ -157,11 +157,11 @@ def run_prediction_pipeline(device_id: str) -> PredictionResponse:
     return PredictionResponse(
       message="Prediction successful",
       device_id=device_id,
-      soh_pred_pct=round(soh_pred_pct_last, 1),
-      soh_pred=safe_float(round(soh_pred_last, 4)),
-      rul_cycles=round(rul_dict["rul_cycles"], 1),
-      rul_months=round(rul_dict["rul_months"], 1),
-      rul_hours=round(rul_dict["rul_hours"], 1),
+      soh_pred_pct=safe_float(soh_pred_pct_last, 0.0),
+      soh_pred=safe_float(soh_pred_last, 0.0),
+      rul_cycles=safe_float(rul_dict["rul_cycles"], 0.0),
+      rul_months=safe_float(rul_dict["rul_months"], 0.0),
+      rul_hours=safe_float(rul_dict["rul_hours"], 0.0),
       soh_series=soh_series
     )
   except Exception as e:
