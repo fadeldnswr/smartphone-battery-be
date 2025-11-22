@@ -61,9 +61,9 @@ async def visualize_data_from_smartphone(
       latest_thr_dict = {
         "device_id": latest_thr_dict["device_id"],
         "ts_utc": latest_thr_dict["ts_utc"],
-        "throughput_upload_mbps": safe_float(latest_thr_dict["throughput_upload_mbps"]),
-        "throughput_download_mbps": safe_float(latest_thr_dict["throughput_download_mbps"]),
-        "throughput_total_mbps": safe_float(latest_thr_dict["throughput_total_mbps"]),
+        "throughput_upload_mbps": safe_float(latest_thr_dict["throughput_upload_mbps"], 0.0, field="throughput_upload_mbps"),
+        "throughput_download_mbps": safe_float(latest_thr_dict["throughput_download_mbps"], 0.0, field="throughput_download_mbps"),
+        "throughput_total_mbps": safe_float(latest_thr_dict["throughput_total_mbps"], 0.0, field="throughput_total_mbps"),
       }
     
     # Return responses
@@ -117,8 +117,8 @@ async def get_app_usage_stats(
       usage_stats.append({
         "device_id": row["device_id"],
         "fg_pkg": row["fg_pkg"],
-        "total_mb": safe_float(row["total_mb"]),
-        "avg_throughput_mbps": safe_float(row["avg_throughput_mbps"]),
+        "total_mb": safe_float(row["total_mb"], 0.0, field="total_mb"),
+        "avg_throughput_mbps": safe_float(row["avg_throughput_mbps"], 0.0, field="avg_throughput_mbps"),
         "rank": int(row["rank"])
       })
 

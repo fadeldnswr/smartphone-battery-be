@@ -93,9 +93,9 @@ async def get_battery_metrics(
       soh_data.append({
         "device_id": row["device_id"],
         "created_at": row["created_at"],
-        "Q_mAh": safe_float(row["Q_mAh"], 0.0),
-        "Ct_mAh": safe_float(row["Ct_mAh"], 0.0),
-        "soh_pct": safe_float(row["soh_pct"], 0.0),
+        "Q_mAh": safe_float(row["Q_mAh"], 0.0, field="Q_mAh"),
+        "Ct_mAh": safe_float(row["Ct_mAh"], 0.0, field="Ct_mAh"),
+        "soh_pct": safe_float(row["soh_pct"], 0.0, field="soh_pct"),
       })
     
     # Take latest data from metrics
@@ -103,9 +103,9 @@ async def get_battery_metrics(
     cycles_data = [{
       "device_id": latest["device_id"],
       "created_at": latest["created_at"].isoformat() if pd.notna(latest["created_at"]) else None,
-      "delta_charge_uah": safe_float(latest.get("delta_Q_mAh", 0.0)),
-      "discharge_uah": safe_float(latest.get("discharge_mAh", 0.0)),
-      "cycles_est": safe_float(latest.get("EFC", 0.0)),
+      "delta_charge_uah": safe_float(latest.get("delta_Q_mAh"), 0.0, field="delta_charge_uah"),
+      "discharge_uah": safe_float(latest.get("discharge_mAh"), 0.0, field="discharge_uah"),
+      "cycles_est": safe_float(latest.get("EFC"), 0.0, field="EFC"),
     }]
     # Return battery metrics response
     return {

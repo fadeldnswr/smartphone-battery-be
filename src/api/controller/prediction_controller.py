@@ -139,8 +139,8 @@ def run_prediction_pipeline(device_id: str) -> PredictionResponse:
     soh_pred_arr = model.predict(X_scaled).reshape(-1) * 100.0
     
     # Last point for summary
-    soh_pred_last = float(soh_pred_arr[-1]) / 100
-    soh_pred_pct_last = float(soh_pred_arr[-1])
+    soh_pred_pct_last = safe_float(soh_pred_arr[-1], 0.0, field="soh_pred_pct_last") or 0.0
+    soh_pred_last = soh_pred_pct_last / 100.0
     
     # Estimate remaining useful life from soh prediction
     rul_dict = estimate_rul_from_soh(soh_pred=soh_pred_last)
@@ -150,18 +150,18 @@ def run_prediction_pipeline(device_id: str) -> PredictionResponse:
     for t, soh_t, soh_p in zip(timestamps, soh_true_list, soh_pred_arr):
       soh_series.append({
         "created_at": t,
-        "soh_true": float(soh_t),
-        "soh_pred": float(soh_p)
+        "soh_true": safe_float(soh_t, 0.0, field="soh_true"),
+        "soh_pred": safe_float(soh_p, 0.0, field="soh_pred")
       })
     
     return PredictionResponse(
       message="Prediction successful",
       device_id=device_id,
-      soh_pred_pct=safe_float(soh_pred_pct_last, 0.0),
-      soh_pred=safe_float(soh_pred_last, 0.0),
-      rul_cycles=rul_dict["rul_cycles"],
-      rul_months=rul_dict["rul_months"],
-      rul_hours=rul_dict["rul_hours"],
+      soh_pred_pct=soh_pred_pct_last,
+      soh_pred=soh_pred_last,
+      rul_cycles=safe_float(rul_dict["rul_cycles"], 0.0, field="rul_cycles"),
+      rul_months=safe_float(rul_dict["rul_months"], 0.0, field="rul_months"),
+      rul_hours=safe_float(rul_dict["rul_hours"], 0.0, field="rul_hours"),
       soh_series=soh_series
     )
   except Exception as e:
@@ -169,18 +169,27 @@ def run_prediction_pipeline(device_id: str) -> PredictionResponse:
     raise CustomException(e, sys)
 
 # Define safe float controller
-def safe_float(x: Any, default: float | None = None) -> float:
+def safe_float(x: Any, default: float | None = 0.0, field:str | None = None):
   '''
   Function to safely convert input to float, returning 0.0 for NaN or infinite values.\n
   params:
   - x: Input value to convert.
-  returns:
-  - float: Converted float value or 0.0.
+  - default (float): Default value to return if conversion fails or value is invalid.
+  - field (str): Optional field name for logging purposes.
   '''
   try:
-    x = float(x)
-    if np.isnan(x) or np.isinf(x):
+    # Check if x is None
+    if x is None:
       return default
-    return x
+    
+    # Convert to float and check for inf or NaN
+    v = float(x)
+    if math.isinf(v) or math.isnan(v):
+      if field:
+        logging.warning(f"Invalid float value for field {field}: {x}. Returning default {default}.")
+      return default
+    return v
   except Exception:
+    if field:
+      logging.warning(f"Error converting field {field} value {x} to float. Returning default {default}.")
     return default
