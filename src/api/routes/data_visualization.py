@@ -14,6 +14,7 @@ from src.api.model.raw_metrics import RawMetricsResponse
 from src.api.model.usage_app_models import AppUsageResponse
 from src.pipeline.data_ingestion import DataIngestion
 from src.pipeline.data_transformation import DataTransformation
+from src.api.controller.prediction_controller import safe_float
 
 # Define router instance
 router = APIRouter()
@@ -60,9 +61,9 @@ async def visualize_data_from_smartphone(
       latest_thr_dict = {
         "device_id": latest_thr_dict["device_id"],
         "ts_utc": latest_thr_dict["ts_utc"],
-        "throughput_upload_mbps": float(latest_thr_dict["throughput_upload_mbps"]),
-        "throughput_download_mbps": float(latest_thr_dict["throughput_download_mbps"]),
-        "throughput_total_mbps": float(latest_thr_dict["throughput_total_mbps"]),
+        "throughput_upload_mbps": safe_float(latest_thr_dict["throughput_upload_mbps"]),
+        "throughput_download_mbps": safe_float(latest_thr_dict["throughput_download_mbps"]),
+        "throughput_total_mbps": safe_float(latest_thr_dict["throughput_total_mbps"]),
       }
     
     # Return responses
@@ -116,8 +117,8 @@ async def get_app_usage_stats(
       usage_stats.append({
         "device_id": row["device_id"],
         "fg_pkg": row["fg_pkg"],
-        "total_mb": float(row["total_mb"]),
-        "avg_throughput_mbps": float(row["avg_throughput_mbps"]),
+        "total_mb": safe_float(row["total_mb"]),
+        "avg_throughput_mbps": safe_float(row["avg_throughput_mbps"]),
         "rank": int(row["rank"])
       })
 

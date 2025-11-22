@@ -14,6 +14,7 @@ from src.logging.logging import logging
 from src.api.model.battery_models import BatteryMetricsResponse
 from src.pipeline.data_ingestion import DataIngestion
 from src.pipeline.data_transformation import DataTransformation
+from src.api.controller.prediction_controller import safe_float
 
 # Define router instance
 router = APIRouter()
@@ -92,9 +93,9 @@ async def get_battery_metrics(
       soh_data.append({
         "device_id": row["device_id"],
         "created_at": row["created_at"],
-        "Q_mAh": float(row["Q_mAh"]) if "Q_mAh" in row else 0,
-        "Ct_mAh": float(row["Ct_mAh"]) if "Ct_mAh" in row else 0 ,
-        "soh_pct": float(row["soh_pct"]),
+        "Q_mAh": safe_float(row["Q_mAh"]) if "Q_mAh" in row else 0,
+        "Ct_mAh": safe_float(row["Ct_mAh"]) if "Ct_mAh" in row else 0 ,
+        "soh_pct": safe_float(row["soh_pct"]),
       })
     
     # Take latest data from metrics
@@ -102,9 +103,9 @@ async def get_battery_metrics(
     cycles_data = [{
       "device_id": latest["device_id"],
       "created_at": latest["created_at"].isoformat() if pd.notna(latest["created_at"]) else None,
-      "delta_charge_uah": float(latest.get("delta_Q_mAh", 0.0)),
-      "discharge_uah": float(latest.get("discharge_mAh", 0.0)),
-      "cycles_est": float(latest.get("EFC", 0.0)),
+      "delta_charge_uah": safe_float(latest.get("delta_Q_mAh", 0.0)),
+      "discharge_uah": safe_float(latest.get("discharge_mAh", 0.0)),
+      "cycles_est": safe_float(latest.get("EFC", 0.0)),
     }]
     # Return battery metrics response
     return {

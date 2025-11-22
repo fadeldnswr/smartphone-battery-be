@@ -7,6 +7,7 @@ import sys
 import numpy as np
 import json
 import pickle
+import math
 
 from src.logging.logging import logging
 from src.exception.exception import CustomException
@@ -157,7 +158,7 @@ def run_prediction_pipeline(device_id: str) -> PredictionResponse:
       message="Prediction successful",
       device_id=device_id,
       soh_pred_pct=round(soh_pred_pct_last, 1),
-      soh_pred=float(round(soh_pred_last, 4)),
+      soh_pred=safe_float(round(soh_pred_last, 4)),
       rul_cycles=round(rul_dict["rul_cycles"], 1),
       rul_months=round(rul_dict["rul_months"], 1),
       rul_hours=round(rul_dict["rul_hours"], 1),
@@ -166,3 +167,20 @@ def run_prediction_pipeline(device_id: str) -> PredictionResponse:
   except Exception as e:
     logging.error(f"Error in run_prediction_pipeline: {e}")
     raise CustomException(e, sys)
+
+# Define safe float controller
+def safe_float(x) -> float:
+  '''
+  Function to safely convert input to float, returning 0.0 for NaN or infinite values.\n
+  params:
+  - x: Input value to convert.
+  returns:
+  - float: Converted float value or 0.0.
+  '''
+  try:
+    x = float(x)
+  except Exception as e:
+    return 0.0
+  if math.isnan(x) or math.isinf(x):
+    return 0.0
+  return x

@@ -14,6 +14,7 @@ from src.api.model.graphs_model import (
   )
 from src.pipeline.data_ingestion import DataIngestion
 from src.pipeline.data_transformation import DataTransformation
+from src.api.controller.prediction_controller import safe_float
 
 # Define router instance
 router = APIRouter()
@@ -73,9 +74,9 @@ async def get_throughput_history(
         thr_points.append(
           ThroughputPoint(
             timestamp=row["created_at"],
-            throughput_total_mbps=float(row["throughput_total_mbps"]),
-            throughput_upload_mbps=float(row.get("throughput_upload_mbps", 0.0)),
-            throughput_download_mbps=float(row.get("throughput_download_mbps", 0.0))
+            throughput_total_mbps=safe_float(row["throughput_total_mbps"]),
+            throughput_upload_mbps=safe_float(row.get("throughput_upload_mbps", 0.0)),
+            throughput_download_mbps=safe_float(row.get("throughput_download_mbps", 0.0))
           )
         )
     
@@ -88,7 +89,7 @@ async def get_throughput_history(
         energy_points.append(
           EnergyConsumptionPoint(
             timestamp=row["created_at"],
-            energy_wh=float(row["energy_wh"])
+            energy_wh=safe_float(row["energy_wh"])
           )
         )
     
@@ -100,9 +101,9 @@ async def get_throughput_history(
         energy_per_bit_points.append(
           EnergyPerBitPoint(
             timestamp=row["created_at"],
-            energy_per_bit_tx_J=float(row.get("energy_per_bit_tx_J", 0.0)),
-            energy_per_bit_rx_J=float(row.get("energy_per_bit_rx_J", 0.0)),
-            energy_per_bit_avg_J=float(row["energy_per_bit_avg_J"])
+            energy_per_bit_tx_J=safe_float(row.get("energy_per_bit_tx_J", 0.0)),
+            energy_per_bit_rx_J=safe_float(row.get("energy_per_bit_rx_J", 0.0)),
+            energy_per_bit_avg_J=safe_float(row["energy_per_bit_avg_J"])
           )
         )
     
@@ -114,7 +115,7 @@ async def get_throughput_history(
         bot_points.append(
           BatteryCostOfTrafficPoint(
             timestamp=row["created_at"],
-            bot_mAh_per_Gbps=float(row["BoT_mAh_per_Gbps"])
+            bot_mAh_per_Gbps=safe_float(row["BoT_mAh_per_Gbps"])
           )
         )
     
