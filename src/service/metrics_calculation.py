@@ -90,62 +90,6 @@ class MetricsCalculation:
     except Exception as e:
       raise CustomException(e, sys)
   
-  def calculate_soh(self, roll_win: int = 3) -> pd.DataFrame:
-    '''
-    Function to calculate State of Health (SoH) from raw data.\n
-    params:
-    - df: DataFrame containing raw data with battery capacity metrics.
-    \nreturns:
-    - DataFrame with calculated SoH values.
-    '''
-    try:
-      if self._check_empty():
-        return self.df
-      logging.info("Calculating State of Health (SoH)...")
-      output_df = calculate_soh_cycles(self.df, roll_win=roll_win)
-      
-      # Rename columns
-      rename_map = {}
-      if "SoH_pct" in output_df.columns:
-        rename_map["SoH_pct"] = "soh_pct"
-      if "SoH_smooth" in output_df.columns:
-        rename_map["SoH_smooth"] = "soh_smooth"
-      if rename_map:
-        output_df = output_df.rename(columns=rename_map)
-      
-      logging.info(
-        output_df[[
-          "device_id", "created_at", "Ct_mAh", "SoH", "soh_smooth", 
-          "soh_pct" if "soh_pct" in output_df.columns else "SoH_pct", "soh_smooth" if "soh_smooth" in output_df.columns else "SoH_smooth_pct", "EFC"]].head()
-      )
-      return output_df
-    except Exception as e:
-      raise CustomException(e, sys)
-  
-  def calculate_battery_cycles(self) -> pd.DataFrame:
-    '''
-    Function to calculate battery cycles from raw data.\n
-    params:
-    - df: DataFrame containing raw data with battery charge/discharge metrics.
-    \nreturns:
-    - DataFrame with calculated battery cycles values.
-    '''
-    try:
-      if self._check_empty():
-        return self.df
-      logging.info("Calculating battery cycles...")
-      output_df = calculate_soh_cycles(self.df)
-      
-      # Take frequently used columns
-      cols = [
-        c for c in ["device_id", "created_at", "Q_mAh", "delta_Q_mAh", "discharge_mAh", "EFC"] if c in output_df.columns
-      ]
-      out_subset = output_df[cols].copy()
-      logging.info(out_subset.head())
-      return out_subset
-    except Exception as e:
-      raise CustomException(e, sys)
-  
   def calculate_throughput(self) -> pd.DataFrame:
     '''
     Function to calculate throughput from raw data.\n

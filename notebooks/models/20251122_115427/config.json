@@ -23,12 +23,12 @@
   ],
   "target_col": "SoH_filled",
   "scaler_type": "StandardScaler",
-  "model_version": "20251122_155923",
+  "model_version": "20251122_115427",
   "rul_config": {
     "strategy": "global_linear_deterministic",
     "k_global": 0.0004,
     "soh_eol": 0.7,
-    "hours_per_cycle": 112.53915890810312,
+    "hours_per_cycle": 110.8779359040694,
     "notes": "k_global ~ average SoH drop per EFC; SoH in fraction [0,1]. RUL_cycles = max((SoH_pred - soh_eol) / k_global, 0)."
   }
 }

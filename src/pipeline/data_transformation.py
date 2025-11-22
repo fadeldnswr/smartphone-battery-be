@@ -12,7 +12,7 @@ from src.logging.logging import logging
 from src.exception.exception import CustomException
 from src.service.metrics_calculation import MetricsCalculation
 from src.service.usage_calculation import UsageCalculation
-from src.core.aging_features import add_aging_features
+from src.utils.utils import add_aging_features, calculate_soh_and_cycles
 from src.core.feature_engineering import add_per_device_zscore
 
 # Define data transformation class
@@ -115,95 +115,118 @@ class DataTransformation:
   
   def compute_metrics(self) -> pd.DataFrame:
     '''
-    Function to compute both throughput and energy consumption metrics.
+    Function to compute all relevant metrics from raw data.\n
+    returns:
+    - pd.DataFrame : DataFrame containing all computed metrics
     '''
     try:
-      calc = MetricsCalculation(df=self.data)
+      raw = self.data
+      if raw is None or raw.empty:
+        logging.warning("Input data is empty in compute_metrics().")
+        return pd.DataFrame()
       
-      # Compute throughput metrics
+      # Ensure created_at is datetime and sort values
+      raw = raw.copy()
+      raw["created_at"] = pd.to_datetime(raw["created_at"], errors="coerce")
+      raw = raw.dropna(subset=["created_at"])
+      raw = raw.sort_values(["device_id", "created_at"])
+      
+      # Initialize MetricsCalculation instance
+      calc = MetricsCalculation(df=raw)
+      
+      # Calculate throughput
       logging.info("Computing throughput metrics...")
       throughput_df = calc.calculate_throughput()
       
-      # Compute energy consumption metrics
+      # Calculate energy
       logging.info("Computing energy consumption metrics...")
       energy_df = calc.calculate_energy_consumption()
       
-      # Compute energy per bit and battery cost of traffic metrics
-      logging.info("Calculate energy per bit and battery cost of traffic metrics...")
+      # Calculate energy per bit & BoT
+      logging.info("Computing energy per bit & BoT metrics...")
       energy_bot_df = calc.calculate_throughput_energy_and_bot()
       
-      # Compute battery cycles metrics
-      logging.info("Calculate battery cycles metrics...")
-      cycles_df = calc.calculate_battery_cycles()
+      # Calculate cycles
+      logging.info("Computing SoH & cycles (notebook version)...")
+      soh_cycles_df = (
+        raw
+        .groupby("device_id", group_keys=False)
+        .apply(lambda g: calculate_soh_and_cycles(g))
+      )
       
-      # Compute State of Health (SoH) metrics
-      logging.info("Calculate State of Health (SoH) metrics...")
-      soh_df = calc.calculate_soh()
+      # SoH_filled calculation
+      soh_cycles_df["SoH_filled"] = soh_cycles_df["SoH_smooth"].where(
+        soh_cycles_df["SoH_smooth"].notna(), soh_cycles_df["SoH"]
+      )
+      soh_cycles_df["SoH_filled"] = (
+        soh_cycles_df
+        .groupby("device_id")["SoH_filled"]
+        .transform(lambda s: s.ffill().bfill())
+      )
       
-      # Check if dataframes are empty
-      for name, df in [
-        ("throughput_df", throughput_df),
-        ("energy_df", energy_df),
-        ("energy_bot_df", energy_bot_df),
-        ("cycles_df", cycles_df),
-        ("soh_df", soh_df),
-      ]: 
-        if df is None:
-          logging.warning(f"{name} is None.")
-        else:
-          logging.info(f"{name} shape: {df.shape}")
+      # Assign soh_df and cycles_df
+      soh_df    = soh_cycles_df
+      cycles_df = soh_cycles_df
       
-      candidates = [throughput_df, energy_df, energy_bot_df, cycles_df, soh_df]
-      non_empty = [df for df in candidates if df is not None and not df.empty]
+      # Merge all computed metrics
+      base_candidates = [throughput_df, soh_df, energy_df, energy_bot_df]
+      non_empty = [
+        df for df in base_candidates
+        if df is not None and not df.empty
+      ]
       
+      # Check if any dataframe is non-empty
       if not non_empty:
         logging.warning("All computed dataframes are empty. Returning empty dataframe.")
         return pd.DataFrame()
       
-      
-      # Start merging dataframes
+      # Start merging from the first non-empty dataframe
       merged = non_empty[0].copy()
       
-      # Merge dataframes on common columns
-      logging.info("Merging throughput and energy data...")
-      merged = merged.merge(
-        energy_df[["device_id", "created_at", "energy_wh", "batt_voltage_v"]], 
-        on=["device_id", "created_at"], 
-        how="left"
-      )
+      # Merge throughput
+      if energy_df is not None and not energy_df.empty:
+        logging.info("Merging energy data...")
+        merged = merged.merge(
+          energy_df[["device_id", "created_at", "energy_wh", "batt_voltage_v"]],
+          on=["device_id", "created_at"],
+          how="left",
+        )
       
-      # Check if energy_bot_df is not empty before merging
+      # Merge energy per bit & BoT
       if energy_bot_df is not None and not energy_bot_df.empty:
+        logging.info("Merging energy_per_bit & BoT data...")
         merged = merged.merge(
           energy_bot_df[["device_id", "created_at", "energy_per_bit_tx_J", "energy_per_bit_rx_J", "energy_per_bit_avg_J", "BoT_mAh_per_Gbps"]],
-          on=["device_id", "created_at"], 
-          how="left"
+          on=["device_id", "created_at"],
+          how="left",
         )
       
-      # Check if cycles_df is not empty before merging
+      # Merge cycles data
       if cycles_df is not None and not cycles_df.empty:
+        logging.info("Merging cycles data (Q_mAh, EFC, ...)...")
         merged = merged.merge(
           cycles_df[["device_id", "created_at", "Q_mAh", "delta_Q_mAh", "discharge_mAh", "EFC"]],
-          on=["device_id", "created_at"], 
-          how="left"
+          on=["device_id", "created_at"],
+          how="left",
         )
       
-      # Check if soh_df is not empty before merging
+      # Merge SoH data
       if soh_df is not None and not soh_df.empty:
+        logging.info("Merging SoH data...")
         merged = merged.merge(
-          soh_df[["device_id", "created_at", "soh_pct", "soh_smooth", "Ct_mAh"]],
+          soh_df[["device_id", "created_at", "SoH", "SoH_smooth", "SoH_pct", "SoH_smooth_pct", "SoH_filled", "Ct_mAh"]],
           on=["device_id", "created_at"],
-          how="left"
+          how="left",
         )
-
-        # Add aging features calculation
+        
+        # Aging features
         logging.info("Adding aging features...")
         merged = add_aging_features(merged)
         
-        # Apply z-score normalization to soh_smooth
-        logging.info("Applying z-score normalization to soh_smooth...")
+        # Z-score normalization
+        logging.info("Applying per-device z-score normalization...")
         merged = add_per_device_zscore(merged)
-        
+      
       logging.info("Metrics computation completed successfully.")
       logging.info(f"Merged DataFrame columns: {merged.columns.tolist()}")
       return merged

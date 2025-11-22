@@ -102,7 +102,7 @@ def run_prediction_pipeline(device_id: str) -> PredictionResponse:
   '''
   try:
     # Load raw metrics
-    df_raw = DataIngestion(table_name="raw_metrics", device_id=device_id).extract_data_from_db(limit=1000)
+    df_raw = DataIngestion(table_name="raw_metrics", device_id=device_id).extract_data_from_db(limit=20000)
     logging.info(f"RAW COLUMNS: {df_raw.columns.tolist()}")
     logging.info(f"RAW HEAD:\n{df_raw.head(5)}")
 
@@ -114,11 +114,15 @@ def run_prediction_pipeline(device_id: str) -> PredictionResponse:
     df_metrics = DataTransformation(data=df_raw).compute_metrics()
     logging.info(f"Metrics data shape {df_metrics.shape} for device {device_id}")
     
+    df_feat = df_metrics.copy()
+    df_feat = df_feat.dropna(subset=feature_cols + [target_col])
+    df_feat = df_feat.sort_values(["device_id", "created_at"]).reset_index(drop=True)
+    
     # Ensure soh true column exists
-    soh_true_col = "soh_smooth" if "soh_smooth" in df_metrics.columns else "soh_pct"
+    soh_true_col = "SoH_smooth" if "SoH_smooth" in df_metrics.columns else "SoH_pct"
     
     # Build sliding windows for prediction
-    values = df_metrics[feature_cols].values
+    values = df_feat[feature_cols].values
     n = len(values)
     
     # Define list of sliding windows
@@ -130,8 +134,8 @@ def run_prediction_pipeline(device_id: str) -> PredictionResponse:
     for i in range(win_size, n):
       win = values[i - win_size : i]
       windows.append(win)
-      timestamps.append(df_metrics["created_at"].iloc[i])
-      soh_true_list.append(float(df_metrics[soh_true_col].iloc[i]) * 100.0)
+      timestamps.append(df_feat["created_at"].iloc[i])
+      soh_true_list.append(float(df_feat[soh_true_col].iloc[i]) * 100.0)
     
     # Scaled input features
     X = np.array(windows)
