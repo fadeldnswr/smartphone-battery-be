@@ -102,7 +102,7 @@ def run_prediction_pipeline(device_id: str) -> PredictionResponse:
   '''
   try:
     # Load raw metrics
-    df_raw = DataIngestion(table_name="raw_metrics", device_id=device_id).extract_data_from_db()
+    df_raw = DataIngestion(table_name="raw_metrics", device_id=device_id).extract_data_from_db(limit=1000)
     logging.info(f"RAW COLUMNS: {df_raw.columns.tolist()}")
     logging.info(f"RAW HEAD:\n{df_raw.head(5)}")
 
