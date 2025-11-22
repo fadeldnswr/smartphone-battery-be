@@ -157,11 +157,11 @@ def run_prediction_pipeline(device_id: str) -> PredictionResponse:
     return PredictionResponse(
       message="Prediction successful",
       device_id=device_id,
-      soh_pred_pct=safe_float(soh_pred_pct_last),
-      soh_pred=safe_float(soh_pred_last),
-      rul_cycles=safe_float(rul_dict["rul_cycles"]),
-      rul_months=safe_float(rul_dict["rul_months"]),
-      rul_hours=safe_float(rul_dict["rul_hours"]),
+      soh_pred_pct=safe_float(soh_pred_pct_last, 0.0),
+      soh_pred=safe_float(soh_pred_last, 0.0),
+      rul_cycles=rul_dict["rul_cycles"],
+      rul_months=rul_dict["rul_months"],
+      rul_hours=rul_dict["rul_hours"],
       soh_series=soh_series
     )
   except Exception as e:
@@ -169,7 +169,7 @@ def run_prediction_pipeline(device_id: str) -> PredictionResponse:
     raise CustomException(e, sys)
 
 # Define safe float controller
-def safe_float(x) -> float:
+def safe_float(x: Any, default: float | None = None) -> float:
   '''
   Function to safely convert input to float, returning 0.0 for NaN or infinite values.\n
   params:
@@ -179,8 +179,8 @@ def safe_float(x) -> float:
   '''
   try:
     x = float(x)
-  except Exception as e:
-    return 0.0
-  if math.isnan(x) or math.isinf(x):
-    return 0.0
-  return x
+    if np.isnan(x) or np.isinf(x):
+      return default
+    return x
+  except Exception:
+    return default

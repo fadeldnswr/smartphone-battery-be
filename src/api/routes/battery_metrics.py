@@ -93,9 +93,9 @@ async def get_battery_metrics(
       soh_data.append({
         "device_id": row["device_id"],
         "created_at": row["created_at"],
-        "Q_mAh": safe_float(row["Q_mAh"]) if "Q_mAh" in row else 0,
-        "Ct_mAh": safe_float(row["Ct_mAh"]) if "Ct_mAh" in row else 0 ,
-        "soh_pct": safe_float(row["soh_pct"]),
+        "Q_mAh": safe_float(row["Q_mAh"], 0.0),
+        "Ct_mAh": safe_float(row["Ct_mAh"], 0.0),
+        "soh_pct": safe_float(row["soh_pct"], 0.0),
       })
     
     # Take latest data from metrics
