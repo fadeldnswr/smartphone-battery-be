@@ -219,6 +219,12 @@ class DataTransformation:
           how="left",
         )
         
+        # Alias for old schema
+        if "SoH_pct" in merged.columns and "soh_pct" not in merged.columns:
+          merged["soh_pct"] = merged["SoH_pct"]
+        if "SoH_smooth" in merged.columns and "soh_smooth" not in merged.columns:
+          merged["soh_smooth"] = merged["SoH_smooth"]
+        
         # Aging features
         logging.info("Adding aging features...")
         merged = add_aging_features(merged)
