@@ -27,7 +27,10 @@ async def get_prediction(device_id: str = Query(..., description="Device ID")) -
       rul_cycles=result.rul_cycles,
       rul_months=result.rul_months,
       rul_hours=result.rul_hours,
-      soh_series=result.soh_series
+      soh_series=result.soh_series,
+      mae_pct=result.mae_pct,
+      rmse_pct=result.rmse_pct,
+      r2_soh=result.r2_soh
     )
   except Exception as e:
     logging.error(f"Error in prediction endpoint: {e}")

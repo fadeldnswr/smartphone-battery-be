@@ -7,11 +7,13 @@ to prepare data for machine learning models.
 import pandas as pd
 import numpy as np
 
-
 from .soh_cycles import calculate_soh_cycles
 from .throughput_energy import calculate_throughput_energy_and_bot
 from .aging_features import add_aging_features
 from .config import DEVICE_COL, TIMESTAMP_COL
+
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from typing import List, Dict, Any, Tuple
 
 # Define base columns for aging features
 AGING_BASE_COLS = [
@@ -91,3 +93,57 @@ def add_per_device_zscore(df, cols=AGING_BASE_COLS) -> pd.DataFrame:
     return df
   except Exception as e:
     print(f"Error in add_per_device_zscore: {e}")
+
+# Define function to build windows
+def build_windows(
+  df_feat: pd.DataFrame, feature_cols: List[str], 
+  target_col: str, win_size: int, 
+  soh_true_col: str = "SoH_smooth") -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+  '''
+  Function to build sliding windows for LSTM input.\n
+  params:
+  - df: Input dataframe with features and target.\n
+  - feature_cols: List of feature column names.\n
+  - target_col: Name of the target column.\n
+  - win_size: Size of the sliding window.\n
+  - soh_true_col: Name of the SoH true column.\n
+  returns:
+  - Tuple of numpy arrays: (X_windows, y_targets, timestamps, soh_true_values).
+  '''
+  try:
+    # Choose SoH true
+    if soh_true_col in df_feat.columns:
+      soh_true_series = df_feat[soh_true_col].astype(float) * 100.0
+    elif "SoH_pct" in df_feat.columns:
+      soh_true_series = df_feat["SoH_pct"].astype(float)
+    else:
+      raise ValueError("No valid SoH true column found.")
+    
+    # Define values
+    values = df_feat[feature_cols].values
+    n = len(values)
+    
+    # Define lists for windows
+    windows = []
+    timestamps = []
+    soh_true_list = []
+    efc_list = []
+    
+    # Create sliding windows
+    for i in range(win_size, n):
+      win = values[i - win_size : i]
+      windows.append(win)
+      timestamps.append(df_feat["created_at"].iloc[i])
+      soh_true_list.append(float(soh_true_series.iloc[i]))
+      efc_list.append(float(df_feat["EFC"].iloc[i]) if "EFC" in df_feat.columns else np.nan)
+    
+    # Create numpy arrays
+    X = np.array(windows, dtype=float)
+    timestamps = np.array(timestamps)
+    soh_true_arr = np.array(soh_true_list, dtype=float)
+    efc_arr = np.array(efc_list, dtype=float)
+    
+    # Return arrays
+    return X, timestamps, soh_true_arr, efc_arr
+  except Exception as e:
+    print(f"Error in build_windows: {e}")

@@ -16,6 +16,7 @@ from src.pipeline.data_transformation import DataTransformation
 from src.api.model.prediction_model import PredictionResponse
 
 from tensorflow.keras.models import load_model
+from sklearn.metrics import mean_absolute_error, r2_score, mean_squared_error
 from typing import Dict, Any
 from dotenv import load_dotenv
 
@@ -91,6 +92,34 @@ def estimate_rul_from_soh(soh_pred: float) -> Dict[str, Any]:
     logging.error(f"Error in estimate_rul_from_soh: {e}")
     raise CustomException(e, sys)
 
+# Define function to compute evaluation metrics
+def compute_eval_metrics(y_true, y_pred) -> Dict[str, Any]:
+  try:
+    # Define metrics
+    y_true = np.asarray(y_true, dtype=float)
+    y_pred = np.asarray(y_pred, dtype=float)
+    
+    mask = np.isfinite(y_true) & np.isfinite(y_pred)
+    if mask.sum() < 2:
+      return { "mae_pct": None, "rmse_pct": None, "r2_soh": None }
+    
+    y_true = y_true[mask]
+    y_pred = y_pred[mask]
+    
+    # Define evaluation metrics
+    mae = mean_absolute_error(y_true, y_pred)
+    rmse = math.sqrt(mean_squared_error(y_true, y_pred))
+    r2 = r2_score(y_true, y_pred)
+    
+    return {
+      "mae_pct": mae,
+      "rmse_pct": rmse,
+      "r2_soh": r2
+    }
+  except Exception as e:
+    logging.error(f"Error in compute_eval_metrics: {e}")
+    raise CustomException(e, sys)
+
 # Define function to run prediction pipeline
 def run_prediction_pipeline(device_id: str) -> PredictionResponse:
   '''
@@ -110,6 +139,12 @@ def run_prediction_pipeline(device_id: str) -> PredictionResponse:
     if df_raw is None or len(df_raw) == 0:
       raise ValueError("No data found for the device.")
     
+    # Filter data for specific date range
+    df_raw = df_raw[
+    (df_raw["created_at"] >= "2025-10-31") &
+    (df_raw["created_at"] <= "2025-11-22")
+    ]
+    
     # Compute metrics
     df_metrics = DataTransformation(data=df_raw).compute_metrics()
     logging.info(f"Metrics data shape {df_metrics.shape} for device {device_id}")
@@ -117,6 +152,10 @@ def run_prediction_pipeline(device_id: str) -> PredictionResponse:
     df_feat = df_metrics.copy()
     df_feat = df_feat.dropna(subset=feature_cols + [target_col])
     df_feat = df_feat.sort_values(["device_id", "created_at"]).reset_index(drop=True)
+    
+    logging.info(f"FIRST TIMESTAMP API: {df_raw['created_at'].min()}")
+    logging.info(f"LAST TIMESTAMP API: {df_raw['created_at'].max()}")
+    logging.info(f"N API SAMPLES: {len(df_raw)}")
     
     # Ensure soh true column exists
     soh_true_col = "SoH_smooth" if "SoH_smooth" in df_metrics.columns else "SoH_pct"
@@ -149,14 +188,27 @@ def run_prediction_pipeline(device_id: str) -> PredictionResponse:
     # Estimate remaining useful life from soh prediction
     rul_dict = estimate_rul_from_soh(soh_pred=soh_pred_last)
     
+    # Extract battery cycles
+    if "EFC" in df_feat.columns:
+      battery_cycles = df_feat["EFC"].dropna().max()
+      battery_cycles = safe_float(battery_cycles, None, field="battery_cycles")
+    else:
+      battery_cycles = None
+    
     # Define soh series
     soh_series = []
-    for t, soh_t, soh_p in zip(timestamps, soh_true_list, soh_pred_arr):
+    for t, soh_t, soh_p, index in zip(timestamps, soh_true_list, soh_pred_arr, range(len(timestamps))):
+      # Take EFC for this point
+      efc_val = df_feat["EFC"].iloc[win_size + index] if "EFC" in df_feat.columns else None
       soh_series.append({
         "created_at": t,
         "soh_true": safe_float(soh_t, 0.0, field="soh_true"),
-        "soh_pred": safe_float(soh_p, 0.0, field="soh_pred")
+        "soh_pred": safe_float(soh_p, 0.0, field="soh_pred"),
+        "efc": safe_float(efc_val, None, field="efc")
       })
+    
+    # Compute evaluation metrics
+    metrics = compute_eval_metrics(soh_true_list, soh_pred_arr)
     
     return PredictionResponse(
       message="Prediction successful",
@@ -166,7 +218,10 @@ def run_prediction_pipeline(device_id: str) -> PredictionResponse:
       rul_cycles=safe_float(rul_dict["rul_cycles"], 0.0, field="rul_cycles"),
       rul_months=safe_float(rul_dict["rul_months"], 0.0, field="rul_months"),
       rul_hours=safe_float(rul_dict["rul_hours"], 0.0, field="rul_hours"),
-      soh_series=soh_series
+      soh_series=soh_series,
+      mae_pct=safe_float(metrics["mae_pct"], None, "mae_pct"),
+      rmse_pct=safe_float(metrics["rmse_pct"], None, "rmse_pct"),
+      r2_soh=safe_float(metrics["r2_soh"], None, "r2_soh")
     )
   except Exception as e:
     logging.error(f"Error in run_prediction_pipeline: {e}")
