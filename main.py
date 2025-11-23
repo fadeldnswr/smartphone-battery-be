@@ -10,7 +10,8 @@ from src.api.routes import (
     data_visualization, 
     graphs_visualization, 
     battery_metrics, 
-    prediction_visualization
+    prediction_visualization,
+    image_routes
 )
 
 # Define instances
@@ -35,6 +36,7 @@ app.include_router(data_visualization.router, prefix="/data-visualization", tags
 app.include_router(graphs_visualization.router, prefix="/graphs", tags=["Graphs Visualization"])
 app.include_router(battery_metrics.router, prefix="/battery", tags=["Battery Metrics"])
 app.include_router(prediction_visualization.router, prefix="/prediction", tags=["Prediction"])
+app.include_router(image_routes.router, prefix="/image-prediction", tags=["Image Prediction"])
 
 # Define root endpoint
 @app.get("/", status_code=200)

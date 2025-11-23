@@ -12,3 +12,4 @@ keras
 seaborn
 ipykernel
 psycopg2-binary 
+python-multipart
