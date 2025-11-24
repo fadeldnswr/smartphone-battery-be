@@ -3,23 +3,30 @@ Model definitions for impact analysis.
 This module defines data models used for representing the impact analysis results.
 '''
 
-from pydantic import BaseModel
-from typing import List, Dict, Any
+from pydantic import BaseModel, Field
+from typing import List, Dict, Any, Literal
 
+# Define e-waste impact model
 class EwasteImpact(BaseModel):
-  scenario: str
-  n_devices: int
-  n_A: int
-  n_B: int
-  n_C: int
-  n_D: int
-  n_eligible: int
-  phones_saved: float
+  alpha: float = Field(..., description="Proportion of e-waste mitigated through the system")
   ewaste_baseline_kg: float
-  ewaste_pred_kg: float
+  ewaste_with_system_kg: float
   ewaste_reduced_kg: float
-  co2_reduced_kg: float
-  r: float
-  alpha: float
-  mass_per_phone_kg: float
-  co2_per_phone_kg: float
+  carbon_saved_kg: float
+
+# Define impact request model
+class ImpactRequest(BaseModel):
+  device_id: str
+  soh_pred_pct: float = Field(..., description="Predicted State of Health percentage of the battery")
+  rul_months: float = Field(..., description="Remaining Useful Life in months")
+  screen_label: Literal["safe", "warning", "broken"]
+
+# Define impact response model
+class ImpactResponse(BaseModel):
+  message: str
+  device_id: str
+  action: Literal["hold", "replace_phone", "replace_battery", "replace_screen"]
+  soh_pred_pct: float
+  rul_months: float
+  screen_label: Literal["safe", "warning", "broken"]
+  scenarios: Dict[Literal["conservative", "optimistic"], EwasteImpact]

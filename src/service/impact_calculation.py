@@ -17,7 +17,7 @@ import sys
 
 # Define constants for impact factors
 MASS_PHONE_KG = 0.18 # Average mass of a smartphone in kg
-EF_PHONE_CO2_KG = 60 # Emission factor for smartphone production in kg CO2
+CARBON_PER_KG = 60 # Emission factor for smartphone production in kg CO2
 
 # Define e-waste mitigation scenarios
 SCENARIOS = {
@@ -26,7 +26,10 @@ SCENARIOS = {
 }
 
 # Create function to compute ewaste impact
-def compute_ewaste_impact(df_summary: pd.DataFrame, scenario: str = "conservative") -> EwasteImpact:
+def compute_ewaste_impact(
+  action: str, 
+  scenario: str = "conservative",
+  phone_mass_kg: float = MASS_PHONE_KG) -> EwasteImpact:
   '''
   Function to compute e-waste impact based on summary data and scenario.\n
   params:
@@ -36,16 +39,37 @@ def compute_ewaste_impact(df_summary: pd.DataFrame, scenario: str = "conservativ
   - EwasteImpact object containing calculated impact metrics.
   '''
   try:
-    # Check if scenario exists
+    # Check if scenario is valid
     if scenario not in SCENARIOS:
-      raise ValueError(f"Scenario '{scenario}' not recognized. Available scenarios: {list(SCENARIOS.keys())}")
+      raise ValueError(f"Invalid scenario: {scenario}. Choose from {list(SCENARIOS.keys())}")
     
-    # Extract scenario parameters
-    params = SCENARIOS[scenario]
-    r = params["r"]
-    alpha = params["alpha"]
+    # Define alpha and r based on scenario
+    alpha = SCENARIOS[scenario]["alpha"]
     
-    # Calculate sum of categories
-    counts = df_summary
+    # Case for reuse action
+    if action == "replace_phone":
+      return EwasteImpact(
+        alpha=alpha,
+        ewaste_baseline_kg=phone_mass_kg,
+        ewaste_with_system_kg=phone_mass_kg,
+        ewaste_reduced_kg=0.0,
+        carbon_saved_kg=0.0
+      )
+    
+    # Case for hold/ screen repair / battery repair
+    ewaste_baseline = phone_mass_kg
+    ewaste_with_system = (1 - alpha) * phone_mass_kg
+    ewaste_reduced = ewaste_baseline - ewaste_with_system
+    carbon_saved = ewaste_reduced * CARBON_PER_KG
+    
+    # Return EwasteImpact object
+    return EwasteImpact(
+      alpha=alpha,
+      ewaste_baseline_kg=ewaste_baseline,
+      ewaste_with_system_kg=ewaste_with_system,
+      ewaste_reduced_kg=ewaste_reduced,
+      carbon_saved_kg=carbon_saved
+    )
   except Exception as e:
-    print(f"Error in compute_ewaste_impact: {e}")
+    logging.error("Error in compute_ewaste_impact", e)
+    raise CustomException(e, sys)
