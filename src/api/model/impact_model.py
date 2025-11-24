@@ -5,6 +5,7 @@ This module defines data models used for representing the impact analysis result
 
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Literal
+from datetime import datetime
 
 # Define e-waste impact model
 class EwasteImpact(BaseModel):
@@ -29,4 +30,5 @@ class ImpactResponse(BaseModel):
   soh_pred_pct: float
   rul_months: float
   screen_label: Literal["safe", "warning", "broken"]
+  expiry_date: datetime
   scenarios: Dict[Literal["conservative", "optimistic"], EwasteImpact]

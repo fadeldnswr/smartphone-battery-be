@@ -15,6 +15,7 @@ from src.api.model.impact_model import (
   ImpactResponse,
   EwasteImpact
 )
+from src.service.expiry_date_calculation import compute_expiry_date
 
 # Threshold constants
 SOH_THRESHOLD_GOOD = 70.0
@@ -22,7 +23,8 @@ RUL_MONTHS_LONG = 24.0
 RUL_MONTHS_SHORT = 3.0
 
 # Define function to recommend action
-def decide_recommendation_action(soh_pred_pct: float, rul_months: float, screen_label: str) -> Literal["hold_phone", "replace_screen", "replace_battery", "replace_phone"]:
+ActionLiteral = Literal["hold_phone", "replace_screen", "replace_battery", "replace_phone"]
+def decide_recommendation_action(soh_pred_pct: float, rul_months: float, screen_label: str) -> ActionLiteral:
   '''
   Function to recommend action based on state of health (SOH) and remaining useful life (RUL).\n
   params:
@@ -83,6 +85,9 @@ def run_impact_calculation(payload: ImpactRequest) -> ImpactResponse:
       raw = compute_ewaste_impact(action=action, scenario=scen)
       scenarios_result[scen] = raw
     
+    # Callculate expiry date
+    expiry_date = compute_expiry_date(rul_months=payload.rul_months)
+    
     # Construct response model
     response = ImpactResponse(
       message="Impact calculation successful",
@@ -91,6 +96,7 @@ def run_impact_calculation(payload: ImpactRequest) -> ImpactResponse:
       soh_pred_pct=payload.soh_pred_pct,
       rul_months=payload.rul_months,
       screen_label=payload.screen_label,
+      expiry_date=expiry_date,
       scenarios=scenarios_result
     )
     logging.info(f"Impact calculation response: {response}")

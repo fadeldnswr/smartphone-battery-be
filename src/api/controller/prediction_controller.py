@@ -14,6 +14,7 @@ from src.exception.exception import CustomException
 from src.pipeline.data_ingestion import DataIngestion
 from src.pipeline.data_transformation import DataTransformation
 from src.api.model.prediction_model import PredictionResponse
+from src.service.expiry_date_calculation import compute_expiry_date
 
 from tensorflow.keras.models import load_model
 from sklearn.metrics import mean_absolute_error, r2_score, mean_squared_error
@@ -192,9 +193,7 @@ def run_prediction_pipeline(device_id: str) -> PredictionResponse:
     rul_dict = estimate_rul_from_soh(soh_pred=soh_pred_last)
     
     # Compute expiry date
-    now = datetime.now()
-    expiry_date = now + timedelta(days=rul_dict["rul_months"] * 30)
-    expiry_date_iso = expiry_date.strftime("%Y-%m-%d")
+    expiry_date = compute_expiry_date(rul_months=rul_dict["rul_months"])
     
     # Extract battery cycles
     if "EFC" in df_feat.columns:
@@ -237,7 +236,7 @@ def run_prediction_pipeline(device_id: str) -> PredictionResponse:
       rul_months=safe_float(rul_dict["rul_months"], 0.0, field="rul_months"),
       rul_hours=safe_float(rul_dict["rul_hours"], 0.0, field="rul_hours"),
       soh_series=soh_series,
-      expiry_date=expiry_date_iso,
+      expiry_date=expiry_date,
       mae_pct=safe_float(metrics["mae_pct"], None, "mae_pct"),
       rmse_pct=safe_float(metrics["rmse_pct"], None, "rmse_pct"),
       r2_soh=safe_float(metrics["r2_soh"], None, "r2_soh")
