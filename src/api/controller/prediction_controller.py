@@ -19,6 +19,7 @@ from tensorflow.keras.models import load_model
 from sklearn.metrics import mean_absolute_error, r2_score, mean_squared_error
 from typing import Dict, Any
 from dotenv import load_dotenv
+from datetime import datetime, timedelta
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ENV_PATH = os.path.join(BASE_DIR, ".env")
@@ -156,6 +157,8 @@ def run_prediction_pipeline(device_id: str) -> PredictionResponse:
     logging.info(f"FIRST TIMESTAMP API: {df_raw['created_at'].min()}")
     logging.info(f"LAST TIMESTAMP API: {df_raw['created_at'].max()}")
     logging.info(f"N API SAMPLES: {len(df_raw)}")
+    logging.info(f"Feature columns: {feature_cols}")
+    logging.info(f"Feature columns to list: {df_metrics.columns.to_list()}")
     
     # Ensure soh true column exists
     soh_true_col = "SoH_smooth" if "SoH_smooth" in df_metrics.columns else "SoH_pct"
@@ -188,6 +191,11 @@ def run_prediction_pipeline(device_id: str) -> PredictionResponse:
     # Estimate remaining useful life from soh prediction
     rul_dict = estimate_rul_from_soh(soh_pred=soh_pred_last)
     
+    # Compute expiry date
+    now = datetime.now()
+    expiry_date = now + timedelta(days=rul_dict["rul_months"] * 30)
+    expiry_date_iso = expiry_date.strftime("%Y-%m-%d")
+    
     # Extract battery cycles
     if "EFC" in df_feat.columns:
       battery_cycles = df_feat["EFC"].dropna().max()
@@ -210,6 +218,16 @@ def run_prediction_pipeline(device_id: str) -> PredictionResponse:
     # Compute evaluation metrics
     metrics = compute_eval_metrics(soh_true_list, soh_pred_arr)
     
+    logging.info(
+      f"SoH_true stats (API) – min: {np.min(soh_true_list):.4f}, "
+      f"max: {np.max(soh_true_list):.4f}, std: {np.std(soh_true_list):.4f}"
+    )
+    logging.info(
+      f"SoH_pred stats (API) – min: {np.min(soh_pred_arr):.4f}, "
+      f"max: {np.max(soh_pred_arr):.4f}, std: {np.std(soh_pred_arr):.4f}"
+    )
+
+    
     return PredictionResponse(
       message="Prediction successful",
       device_id=device_id,
@@ -219,6 +237,7 @@ def run_prediction_pipeline(device_id: str) -> PredictionResponse:
       rul_months=safe_float(rul_dict["rul_months"], 0.0, field="rul_months"),
       rul_hours=safe_float(rul_dict["rul_hours"], 0.0, field="rul_hours"),
       soh_series=soh_series,
+      expiry_date=expiry_date_iso,
       mae_pct=safe_float(metrics["mae_pct"], None, "mae_pct"),
       rmse_pct=safe_float(metrics["rmse_pct"], None, "rmse_pct"),
       r2_soh=safe_float(metrics["r2_soh"], None, "r2_soh")

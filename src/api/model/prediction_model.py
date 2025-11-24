@@ -22,6 +22,7 @@ class PredictionResponse(BaseModel):
   rul_months: float
   rul_hours: float
   soh_series: List[SoHPrediction]
+  expiry_date: str
   mae_pct: float
   rmse_pct: float
   r2_soh: float

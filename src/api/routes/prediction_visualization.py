@@ -28,6 +28,7 @@ async def get_prediction(device_id: str = Query(..., description="Device ID")) -
       rul_months=result.rul_months,
       rul_hours=result.rul_hours,
       soh_series=result.soh_series,
+      expiry_date=result.expiry_date,
       mae_pct=result.mae_pct,
       rmse_pct=result.rmse_pct,
       r2_soh=result.r2_soh
