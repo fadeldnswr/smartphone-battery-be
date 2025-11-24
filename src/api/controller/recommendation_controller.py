@@ -36,7 +36,7 @@ def decide_recommendation_action(soh_pred_pct: float, rul_months: float, screen_
     # Case for good battery health
     if soh_pred_pct >= SOH_THRESHOLD_GOOD and rul_months >= RUL_MONTHS_LONG:
       if screen_label == "safe":
-        return "hold_phone"
+        return "hold"
       else:
         return "replace_screen"
     
@@ -53,7 +53,7 @@ def decide_recommendation_action(soh_pred_pct: float, rul_months: float, screen_
       return "replace_battery"
     
     # Default action
-    return "hold_phone"
+    return "hold"
   except Exception as e:
     raise CustomException(e, sys)
 
