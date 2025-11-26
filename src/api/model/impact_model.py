@@ -14,6 +14,7 @@ class EwasteImpact(BaseModel):
   ewaste_with_system_kg: float
   ewaste_reduced_kg: float
   carbon_saved_kg: float
+  car_km_equivalent: float
 
 # Define impact request model
 class ImpactRequest(BaseModel):

@@ -10,6 +10,7 @@ from typing import List, Dict, Any
 from src.logging.logging import logging
 from src.exception.exception import CustomException
 from src.api.model.impact_model import EwasteImpact
+from src.service.carbon_equivalent_calculation import carbon_to_car_km
 
 import pandas as pd
 import os
@@ -61,6 +62,7 @@ def compute_ewaste_impact(
     ewaste_with_system = (1 - alpha) * phone_mass_kg
     ewaste_reduced = ewaste_baseline - ewaste_with_system
     carbon_saved = ewaste_reduced * CARBON_PER_KG
+    car_km = carbon_to_car_km(carbon_saved_kg=carbon_saved)
     
     # Return EwasteImpact object
     return EwasteImpact(
@@ -68,7 +70,8 @@ def compute_ewaste_impact(
       ewaste_baseline_kg=ewaste_baseline,
       ewaste_with_system_kg=ewaste_with_system,
       ewaste_reduced_kg=ewaste_reduced,
-      carbon_saved_kg=carbon_saved
+      carbon_saved_kg=carbon_saved,
+      car_km_equivalent=car_km
     )
   except Exception as e:
     logging.error("Error in compute_ewaste_impact", e)
