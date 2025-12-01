@@ -8,6 +8,7 @@ import numpy as np
 import json
 import pickle
 import math
+import pandas as pd
 
 from src.logging.logging import logging
 from src.exception.exception import CustomException
@@ -145,12 +146,20 @@ def run_prediction_pipeline(device_id: str) -> PredictionResponse:
     df_metrics = DataTransformation(data=df_raw).compute_metrics()
     logging.info(f"Metrics data shape {df_metrics.shape} for device {device_id}")
     
+    df_metrics = pd.get_dummies(df_metrics, columns=["fg_pkg"], prefix="app")
+    for col in feature_cols:
+      if col not in df_metrics.columns:
+        if col.startswith("app_"):
+          df_metrics[col] = 0.0
+        else:
+          logging.warning(f"Feature column {col} not found in metrics data. Filling with NaN.")
+    
+    extra_app_cols = [c for c in df_metrics.columns if c.startswith("app_") and c not in feature_cols]
+    if extra_app_cols:
+      df_metrics = df_metrics.drop(columns=extra_app_cols)
+    
     # Check missing cols
     required_cols = feature_cols + [target_col]
-    missing_cols = [col for col in required_cols if col not in df_metrics.columns]
-    if missing_cols:
-      logging.info(f"Missing required columns in metrics data: {missing_cols}")
-      raise CustomException(ValueError(f"Missing required columns in metrics data: {missing_cols}"), sys)
     
     df_feat = df_metrics.copy()
     df_feat = df_feat.dropna(subset=feature_cols + [target_col])
