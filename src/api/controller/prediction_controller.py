@@ -141,15 +141,16 @@ def run_prediction_pipeline(device_id: str) -> PredictionResponse:
     if df_raw is None or len(df_raw) == 0:
       raise ValueError("No data found for the device.")
     
-    # Filter data for specific date range
-    df_raw = df_raw[
-    (df_raw["created_at"] >= "2025-10-31") &
-    (df_raw["created_at"] <= "2025-11-22")
-    ]
-    
     # Compute metrics
     df_metrics = DataTransformation(data=df_raw).compute_metrics()
     logging.info(f"Metrics data shape {df_metrics.shape} for device {device_id}")
+    
+    # Check missing cols
+    required_cols = feature_cols + [target_col]
+    missing_cols = [col for col in required_cols if col not in df_metrics.columns]
+    if missing_cols:
+      logging.info(f"Missing required columns in metrics data: {missing_cols}")
+      raise CustomException(ValueError(f"Missing required columns in metrics data: {missing_cols}"), sys)
     
     df_feat = df_metrics.copy()
     df_feat = df_feat.dropna(subset=feature_cols + [target_col])
