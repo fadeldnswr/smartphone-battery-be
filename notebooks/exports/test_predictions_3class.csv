@@ -1,74 +1,74 @@
 filename,true_label,pred_label,prob_broken,prob_safe,prob_warning,severity_score,score_bucket
-broken\Datacluster Cracked Screen (121).jpg,broken,warning,0.18321185,0.10940841,0.7073797,52.95213535428047,warning
-broken\Datacluster Cracked Screen (131).jpg,broken,broken,0.9020849,0.0038910084,0.094024114,85.92775563243777,broken
-broken\Datacluster Cracked Screen (137).jpg,broken,broken,0.9999349,1.6290208e-07,6.496048e-05,89.99739170839106,broken
-broken\Datacluster Cracked Screen (138).jpg,broken,broken,0.99659413,0.00015372499,0.003252076,89.85761283853208,broken
-broken\Datacluster Cracked Screen (22).jpg,broken,warning,0.09848973,0.008389971,0.8931203,53.60398999415338,warning
-broken\Datacluster Cracked Screen (222).jpg,broken,broken,0.74064934,0.0016123566,0.2577382,79.56147453514859,broken
-broken\Datacluster Cracked Screen (23).jpg,broken,broken,0.5755196,0.020861337,0.40361896,72.1863273717463,broken
-broken\Datacluster Cracked Screen (233).jpg,broken,broken,0.98345906,8.8699286e-05,0.016452147,89.33480931569648,broken
-broken\Datacluster Cracked Screen (24).jpg,broken,broken,0.9852352,2.255599e-05,0.0147422245,89.40850606477397,broken
-broken\Datacluster Cracked Screen (241).jpg,broken,broken,0.98198676,6.821953e-05,0.017945014,89.27674139071314,broken
-broken\Datacluster Cracked Screen (263).jpg,broken,broken,0.8314341,0.06989892,0.09866697,80.46140424907207,broken
-broken\Datacluster Cracked Screen (285).jpg,broken,warning,0.15523466,0.00997406,0.8347913,55.810425551608205,warning
-broken\Datacluster Cracked Screen (298).jpg,broken,warning,0.4639042,0.042423926,0.49367183,66.85920916497707,warning
-broken\Datacluster Cracked Screen (42).jpg,broken,warning,0.02869757,0.006987681,0.96431476,50.86839612107724,warning
-broken\Datacluster Cracked Screen (50).jpg,broken,broken,0.73882216,0.00012261982,0.26105526,79.54798383667367,broken
-broken\Datacluster Cracked Screen (64).jpg,broken,broken,0.9735877,0.00061683456,0.025795441,88.9188326621661,broken
-broken\Datacluster Cracked Screen (89).jpg,broken,broken,0.58823526,0.0096718455,0.40209284,73.14253398217261,broken
-broken\Datacluster Cracked Screen (95).jpg,broken,broken,0.5251902,0.007254144,0.46755567,70.7174407504499,broken
-broken\WhatsApp Image 2025-11-09 at 12.03.43 PM - Luthfi Abdillah Wahid.jpeg,broken,warning,0.0037115812,0.069093995,0.9271944,47.38470308482647,warning
-broken\img_hp_2.jpeg,broken,broken,0.9987484,5.403166e-05,0.0011975012,89.94777332693047,broken
-broken\img_hp_3.jpg,broken,warning,0.45494097,0.0071598208,0.53789926,67.9112487193197,warning
-broken\img_hp_4.jpg,broken,broken,0.99144465,0.00023374562,0.008321631,89.64843725276296,broken
-safe\1000008132 - rafael geraldine.jpg,safe,safe,0.011137219,0.7351705,0.25369224,21.038666535168886,safe
-safe\1000052669 - Julian Krisyairazy.jpg,safe,safe,0.007429739,0.5103408,0.48222938,29.88355369772762,safe
-safe\1000062078 - kafilia Shahab.jpg,safe,safe,0.0034824382,0.5887101,0.4078075,26.590895685367286,safe
-safe\1000137465 - Muhamad Rizky.jpg,safe,warning,0.2267372,0.22596666,0.5472961,50.030820071697235,warning
-safe\1000173777 - khalif yudhanta.jpg,safe,warning,0.0057112076,0.2715191,0.7227697,39.36768351588398,warning
-safe\1762606384782 - Ricardo Pranata Mulia.jpg,safe,warning,0.061177544,0.33264875,0.60617363,39.14114825427532,warning
-safe\190528 - Muhammad Daffa Ali Amanullah 2206810881.jpg,safe,safe,0.027453436,0.5725877,0.39995882,28.194627445191145,safe
-safe\20251108_201202 - Nelson Laurensius.jpg,safe,safe,0.005723897,0.6953946,0.29888153,22.413173015229404,safe
-safe\Datacluster Cracked Screen (116).jpg,safe,warning,0.0009790292,0.08403655,0.9149844,46.67769839637913,warning
-safe\Datacluster Cracked Screen (123).jpg,safe,safe,0.005336366,0.9901338,0.004529757,10.608099019154906,safe
-safe\Datacluster Cracked Screen (130).jpg,safe,warning,0.055513807,0.2844399,0.6600462,40.84295250475407,warning
-safe\Datacluster Cracked Screen (143).jpg,safe,warning,0.041866258,0.11942586,0.8387078,46.89761206507683,warning
-safe\Datacluster Cracked Screen (151).jpg,safe,safe,0.005878136,0.78374326,0.21037862,18.885395717807114,safe
-safe\Datacluster Cracked Screen (196).jpg,safe,warning,0.05491109,0.3597346,0.5853544,37.80706327408552,warning
-safe\Datacluster Cracked Screen (299).jpg,safe,safe,0.013133434,0.7203327,0.2665339,21.712031411007047,safe
-safe\Datacluster Cracked Screen (88).jpg,safe,safe,0.015915101,0.8644524,0.11963253,16.058509703725576,safe
-safe\IMG-20251108-WA0001 - Muhammad Ardell Rafif Setianegara.jpg,safe,safe,0.00019483028,0.6641936,0.33561167,23.440053991944296,safe
-safe\IMG-20251109-WA0000 - Alvin Hadar.jpg,safe,warning,0.0038037528,0.44981694,0.5463793,32.1594735654071,warning
-safe\IMG-20251110-WA0001 - Hakim Ridwan.jpg,safe,safe,0.01258117,0.69869536,0.28872344,22.555430829524994,safe
-safe\IMG-20251110-WA0015 - altha g.jpg,safe,warning,0.36956525,0.15489121,0.4755436,58.58696386218071,warning
-safe\IMG-20251112-WA0005 - altha g.jpg,safe,safe,0.004980421,0.8625834,0.13243616,15.695879706181586,safe
-safe\IMG_0332 - Fathih Firmansyah.jpg,safe,safe,0.0066092983,0.5399041,0.45348662,28.668209090828896,safe
-safe\IMG_20251111_115545 - Aqeel Noebi.jpg,safe,warning,0.0014139053,0.06465534,0.93393075,47.4703426216729,warning
-safe\IMG_20251111_163150 - Farrell Desnanda.jpg,safe,warning,0.0049660876,0.3701391,0.6248948,35.393078699707985,warning
-safe\buat fadel - Joseph Karl Elias.jpg,safe,safe,0.06606318,0.767668,0.16626881,21.93580687046051,safe
-safe\messageImage_1762783358720 - Faiz Candra Mahardika.jpg,safe,safe,0.007590844,0.55350876,0.43890038,28.16328259650618,safe
-warning\1762617661723 - Gracia Ronauli Arella.jpg,warning,warning,0.058183856,0.10800104,0.83381504,48.00730936229229,warning
-warning\Datacluster Cracked Screen (118).jpg,warning,warning,0.19344428,0.005824405,0.80073124,57.50479149632156,warning
-warning\Datacluster Cracked Screen (128).jpg,warning,warning,0.20167048,0.0011826202,0.7971469,58.019515469204634,warning
-warning\Datacluster Cracked Screen (129).jpg,warning,broken,0.64477736,0.008998957,0.34622368,75.43113586492836,broken
-warning\Datacluster Cracked Screen (144).jpg,warning,warning,0.20259823,0.011856314,0.7855454,57.629674188792706,warning
-warning\Datacluster Cracked Screen (154).jpg,warning,warning,0.2724661,0.00059528544,0.72693866,60.8748344972264,warning
-warning\Datacluster Cracked Screen (157).jpg,warning,broken,0.651407,0.07846122,0.27013174,72.91782937943935,broken
-warning\Datacluster Cracked Screen (173).jpg,warning,broken,0.91207516,0.00064358907,0.08728121,86.4572610752657,broken
-warning\Datacluster Cracked Screen (177).jpg,warning,warning,0.13788046,0.090015694,0.7721038,51.91458761692047,warning
-warning\Datacluster Cracked Screen (179).jpg,warning,warning,0.34098387,0.00901704,0.64999914,63.27867557294667,warning
-warning\Datacluster Cracked Screen (194).jpg,warning,broken,0.9232006,0.0041097235,0.07268957,86.76363041624427,broken
-warning\Datacluster Cracked Screen (212).jpg,warning,warning,0.042055134,0.009349255,0.9485957,51.308239717036486,warning
-warning\Datacluster Cracked Screen (251).jpg,warning,warning,0.042903576,0.0020623382,0.955034,51.633646104019135,warning
-warning\Datacluster Cracked Screen (253).jpg,warning,warning,0.07060427,0.011932226,0.9174636,52.34688678756356,warning
-warning\Datacluster Cracked Screen (26).jpg,warning,warning,0.024312133,0.000108965985,0.9755789,50.96812683470489,warning
-warning\Datacluster Cracked Screen (67).jpg,warning,warning,0.007289822,0.29765683,0.6950533,38.385316310450435,warning
-warning\Datacluster Cracked Screen (74).jpg,warning,warning,0.0048006093,0.092986524,0.9022129,46.47256596945226,warning
-warning\Datacluster Cracked Screen (76).jpg,warning,warning,0.056681115,0.020474108,0.9228448,51.448282804340124,warning
-warning\Datacluster Cracked Screen (82).jpg,warning,warning,0.024234338,0.077081695,0.89868397,47.88610560819507,warning
-warning\Datacluster Cracked Screen (84).jpg,warning,warning,0.009548811,0.005589826,0.98486125,50.15835400670767,warning
-warning\Datacluster Cracked Screen (9).jpg,warning,warning,0.09170704,0.022867726,0.8854252,52.753571663051844,warning
-warning\Datacluster Cracked Screen (92).jpg,warning,broken,0.9622138,0.0010400271,0.036746174,88.44695225940086,broken
-warning\Datacluster Cracked Screen (96).jpg,warning,warning,0.48317495,0.028359026,0.488466,68.1926354765892,warning
-warning\IMG-20251109-WA0002 - Muhammad Refansa Annaafi.jpg,warning,warning,0.02944874,0.20341972,0.76713157,43.0411621183157,warning
-warning\img_hp.jpg,warning,broken,0.79602677,0.0003829545,0.20359024,81.82575071463361,broken
+broken\Datacluster Cracked Screen (121).jpg,broken,warning,0.07886729,0.3553366,0.56579614,38.941228687763214,warning
+broken\Datacluster Cracked Screen (131).jpg,broken,broken,0.6684765,0.136273,0.19525053,71.28814324736595,broken
+broken\Datacluster Cracked Screen (137).jpg,broken,broken,0.9979079,0.0002707552,0.0018213401,89.90548348228913,broken
+broken\Datacluster Cracked Screen (138).jpg,broken,broken,0.8728412,0.03860539,0.08855337,83.36942847818136,broken
+broken\Datacluster Cracked Screen (22).jpg,broken,warning,0.1549753,0.08766352,0.7573612,52.6924704015255,warning
+broken\Datacluster Cracked Screen (222).jpg,broken,broken,0.76404804,0.021834683,0.21411726,79.68853335827589,broken
+broken\Datacluster Cracked Screen (23).jpg,broken,safe,0.27891448,0.45701674,0.26406872,42.87590682506561,warning
+broken\Datacluster Cracked Screen (233).jpg,broken,broken,0.89865345,0.0270378,0.07430876,84.86462630331516,broken
+broken\Datacluster Cracked Screen (24).jpg,broken,broken,0.90059507,0.009334503,0.090070516,85.6504270248115,broken
+broken\Datacluster Cracked Screen (241).jpg,broken,broken,0.89882296,0.015313774,0.08586315,85.34036196768284,broken
+broken\Datacluster Cracked Screen (263).jpg,broken,safe,0.3213941,0.4703971,0.20820874,44.039875864982605,warning
+broken\Datacluster Cracked Screen (285).jpg,broken,warning,0.24071978,0.12601279,0.6332674,54.588278234004974,warning
+broken\Datacluster Cracked Screen (298).jpg,broken,safe,0.18855345,0.42300197,0.3884446,40.6220605969429,warning
+broken\Datacluster Cracked Screen (42).jpg,broken,warning,0.10545741,0.08570534,0.80883723,50.790082067251205,warning
+broken\Datacluster Cracked Screen (50).jpg,broken,broken,0.50890344,0.019515825,0.47158068,69.57550240680575,warning
+broken\Datacluster Cracked Screen (64).jpg,broken,broken,0.87891865,0.008377482,0.11270384,84.82164499349892,broken
+broken\Datacluster Cracked Screen (89).jpg,broken,broken,0.49796277,0.11643796,0.38559937,65.26099786162376,warning
+broken\Datacluster Cracked Screen (95).jpg,broken,warning,0.24332988,0.2679037,0.4887664,49.01704639196396,warning
+broken\WhatsApp Image 2025-11-09 at 12.03.43 PM - Luthfi Abdillah Wahid.jpeg,broken,warning,0.016786024,0.25656942,0.7266446,40.40866509079933,warning
+broken\img_hp_2.jpeg,broken,broken,0.9334385,0.0032626698,0.06329888,87.20703394152224,broken
+broken\img_hp_3.jpg,broken,broken,0.521013,0.061905175,0.4170818,68.36431384086609,warning
+broken\img_hp_4.jpg,broken,broken,0.7196014,0.10412118,0.17627741,74.61920782923698,broken
+safe\1000008132 - rafael geraldine.jpg,safe,safe,0.044073414,0.7309037,0.22502284,22.526785992085934,safe
+safe\1000052669 - Julian Krisyairazy.jpg,safe,safe,0.032708924,0.70088124,0.26640978,23.273104839026928,safe
+safe\1000062078 - kafilia Shahab.jpg,safe,safe,0.016511014,0.7913689,0.19212008,19.00568401440978,safe
+safe\1000137465 - Muhamad Rizky.jpg,safe,safe,0.11093013,0.62671286,0.26235706,29.368693083524704,safe
+safe\1000173777 - khalif yudhanta.jpg,safe,warning,0.046792854,0.4586442,0.49456292,33.525945134460926,warning
+safe\1762606384782 - Ricardo Pranata Mulia.jpg,safe,warning,0.12170824,0.11805918,0.7602326,50.14596447348595,warning
+safe\190528 - Muhammad Daffa Ali Amanullah 2206810881.jpg,safe,warning,0.17524683,0.3294181,0.4953351,43.833151161670685,warning
+safe\20251108_201202 - Nelson Laurensius.jpg,safe,safe,0.1227878,0.5614789,0.31573325,32.45235413312912,warning
+safe\Datacluster Cracked Screen (116).jpg,safe,safe,0.0075018574,0.5752113,0.41728678,27.291619200259447,safe
+safe\Datacluster Cracked Screen (123).jpg,safe,safe,0.04256206,0.9209,0.036537897,14.866480119526386,safe
+safe\Datacluster Cracked Screen (130).jpg,safe,warning,0.09307573,0.396992,0.50993234,37.843352630734444,warning
+safe\Datacluster Cracked Screen (143).jpg,safe,warning,0.22958,0.10609208,0.6643279,54.93951678276062,warning
+safe\Datacluster Cracked Screen (151).jpg,safe,safe,0.045208704,0.848995,0.10579631,17.848548404872417,safe
+safe\Datacluster Cracked Screen (196).jpg,safe,warning,0.0934506,0.22804682,0.6785026,44.61615301668644,warning
+safe\Datacluster Cracked Screen (299).jpg,safe,safe,0.025921997,0.68561643,0.28846163,23.6122253164649,safe
+safe\Datacluster Cracked Screen (88).jpg,safe,safe,0.099417105,0.6989687,0.20161417,26.017935127019882,safe
+safe\IMG-20251108-WA0001 - Muhammad Ardell Rafif Setianegara.jpg,safe,safe,0.004164684,0.8961177,0.099717624,14.321879665367305,safe
+safe\IMG-20251109-WA0000 - Alvin Hadar.jpg,safe,warning,0.03570489,0.25181594,0.7124792,41.35555811226368,warning
+safe\IMG-20251110-WA0001 - Hakim Ridwan.jpg,safe,safe,0.054597378,0.67768663,0.26771596,25.07642835378647,safe
+safe\IMG-20251110-WA0015 - altha g.jpg,safe,safe,0.18368734,0.4423503,0.37396234,39.65348109602928,warning
+safe\IMG-20251112-WA0005 - altha g.jpg,safe,safe,0.033701055,0.50399363,0.46230528,31.188295111060143,warning
+safe\IMG_0332 - Fathih Firmansyah.jpg,safe,safe,0.04137828,0.68090457,0.27771714,24.418947882950306,safe
+safe\IMG_20251111_115545 - Aqeel Noebi.jpg,safe,warning,0.014233861,0.17202145,0.81374466,43.68849519640207,warning
+safe\IMG_20251111_163150 - Farrell Desnanda.jpg,safe,safe,0.021185394,0.5984785,0.38033608,26.90827425569296,safe
+safe\buat fadel - Joseph Karl Elias.jpg,safe,safe,0.11941442,0.65729135,0.22329424,28.484923392534256,safe
+safe\messageImage_1762783358720 - Faiz Candra Mahardika.jpg,safe,safe,0.067675784,0.5714019,0.36092243,29.850960820913315,safe
+warning\1762617661723 - Gracia Ronauli Arella.jpg,warning,safe,0.08436974,0.5164781,0.39915213,32.71566443145275,warning
+warning\Datacluster Cracked Screen (118).jpg,warning,warning,0.32936746,0.09728554,0.5733469,59.283272325992584,warning
+warning\Datacluster Cracked Screen (128).jpg,warning,warning,0.29358318,0.08408569,0.6223311,58.37989762425423,warning
+warning\Datacluster Cracked Screen (129).jpg,warning,warning,0.3824411,0.08673617,0.53082263,61.82819277048111,warning
+warning\Datacluster Cracked Screen (144).jpg,warning,warning,0.14598337,0.08468646,0.76933014,52.451874911785126,warning
+warning\Datacluster Cracked Screen (154).jpg,warning,warning,0.41507402,0.023543904,0.5613821,65.66120663657784,warning
+warning\Datacluster Cracked Screen (157).jpg,warning,safe,0.22046469,0.51268595,0.2668493,38.3111472427845,warning
+warning\Datacluster Cracked Screen (173).jpg,warning,broken,0.60960764,0.01567003,0.3747223,73.75750271603465,broken
+warning\Datacluster Cracked Screen (177).jpg,warning,warning,0.14919502,0.28131527,0.5694897,44.715189933776855,warning
+warning\Datacluster Cracked Screen (179).jpg,warning,warning,0.45358518,0.080483854,0.46593097,64.92405295372009,warning
+warning\Datacluster Cracked Screen (194).jpg,warning,broken,0.438902,0.14423111,0.41686693,61.78683668375015,warning
+warning\Datacluster Cracked Screen (212).jpg,warning,warning,0.13700548,0.2177433,0.6452512,46.77048683166504,warning
+warning\Datacluster Cracked Screen (251).jpg,warning,warning,0.21550028,0.044434056,0.74006563,56.84264749288559,warning
+warning\Datacluster Cracked Screen (253).jpg,warning,warning,0.24592663,0.18139061,0.5726828,52.581443041563034,warning
+warning\Datacluster Cracked Screen (26).jpg,warning,warning,0.18268886,0.008007258,0.8093039,56.98726415634155,warning
+warning\Datacluster Cracked Screen (67).jpg,warning,warning,0.021180023,0.22943039,0.7493895,41.66998241096735,warning
+warning\Datacluster Cracked Screen (74).jpg,warning,warning,0.04698579,0.2600389,0.6929752,41.477871388196945,warning
+warning\Datacluster Cracked Screen (76).jpg,warning,warning,0.30292198,0.065280214,0.6317978,59.50566992163658,warning
+warning\Datacluster Cracked Screen (82).jpg,warning,warning,0.071168184,0.4072542,0.5215776,36.556558310985565,warning
+warning\Datacluster Cracked Screen (84).jpg,warning,warning,0.09576056,0.061435528,0.84280396,51.37300357222557,warning
+warning\Datacluster Cracked Screen (9).jpg,warning,warning,0.13195814,0.040549636,0.8274923,53.65634396672249,warning
+warning\Datacluster Cracked Screen (92).jpg,warning,broken,0.8775431,0.031295877,0.09116106,83.84988989681005,broken
+warning\Datacluster Cracked Screen (96).jpg,warning,warning,0.38149458,0.16914235,0.4493631,58.49409148097038,warning
+warning\IMG-20251109-WA0002 - Muhammad Refansa Annaafi.jpg,warning,warning,0.10729135,0.38447523,0.5082334,38.91264505684376,warning
+warning\img_hp.jpg,warning,broken,0.4967578,0.088626966,0.41461524,66.32523432374,warning

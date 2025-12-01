@@ -1,0 +1,34 @@
+{
+  "window_size": 24,
+  "feature_cols": [
+    "batt_voltage_v",
+    "batt_temp_c",
+    "throughput_total_mbps",
+    "energy_per_bit_avg_J",
+    "EFC",
+    "soh_trend",
+    "efc_delta",
+    "temp_ema",
+    "temp_max_win",
+    "tp_ema",
+    "epb_ema",
+    "batt_voltage_v_z",
+    "batt_temp_c_z",
+    "throughput_total_mbps_z",
+    "energy_per_bit_avg_J_z",
+    "SoH_filled_z",
+    "EFC_z",
+    "soh_trend_z",
+    "BoT_mAh_per_Gbps"
+  ],
+  "target_col": "SoH_filled",
+  "scaler_type": "StandardScaler",
+  "model_version": "20251130_160653",
+  "rul_config": {
+    "strategy": "global_linear_deterministic",
+    "k_global": 0.0004,
+    "soh_eol": 0.7,
+    "hours_per_cycle": 152.84818784652666,
+    "notes": "k_global ~ average SoH drop per EFC; SoH in fraction [0,1]. RUL_cycles = max((SoH_pred - soh_eol) / k_global, 0)."
+  }
+}
