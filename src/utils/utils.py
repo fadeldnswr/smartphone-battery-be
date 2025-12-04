@@ -74,7 +74,7 @@ def _hampel(s: pd.Series, k: int = 7, nsigma: float = 5.0) -> pd.Series:
 # Create function to calculate SoH and battery cycles
 def calculate_soh_and_cycles(
   df: pd.DataFrame, capacity_map: dict = BATTERY_CAPACITY_SPEC, 
-  default_C0: int = 5000, threshold: int = 100, roll_win: int = 3) -> pd.DataFrame:
+  default_C0: int = 5000,  roll_win: int = 3) -> pd.DataFrame:
   try:
     # Prepare dataframe
     df = df.copy() 
@@ -129,7 +129,7 @@ def calculate_soh_and_cycles(
       return df
     
     # Ct_mAh calculation from blocks of full charges
-    full_thresh = max(threshold - 1, 98)
+    full_thresh = 90
     df["battery_level"] = pd.to_numeric(df["battery_level"], errors="coerce")
     df["is_full"] = (df["battery_level"] >= full_thresh).astype(int)
     block_id = (df["is_full"].ne(df["is_full"].shift(1))).cumsum()
@@ -149,25 +149,30 @@ def calculate_soh_and_cycles(
     if df["Ct_mAh"].isna().all():
       df["Ct_mAh"] = (
         df["Q_mAh"]
-        .rolling(window=6, min_periods=3)
-        .max()
+        .rolling(window=500, min_periods=100)
+        .quantile(0.95)
       )
     
-    if C_nom_spec is not None:
-      df["Ct_mAh"] = df["Ct_mAh"].clip(lower=0.70 * C_nom_spec ,upper=1.15 * C_nom_spec)
+    if C_nom_spec is not None and df["Ct_mAh"].max() > 0.3 * C_nom_spec:
+        df["Ct_mAh"] = df["Ct_mAh"].clip(
+            lower=0.7 * C_nom_spec,
+            upper=1.1 * C_nom_spec,
+        )
     
-    df["Ct_mAh"] = df["Ct_mAh"].ffill()
+    df["Ct_mAh"] = df["Ct_mAh"].interpolate(method="linear").ewm(span=20, adjust=False).mean()
     
     # SoH calculation and smoothing
     valid_ct = df["Ct_mAh"].dropna()
+    C0_ref_data = None
     if not valid_ct.empty:
       hi = np.nanpercentile(valid_ct, 99)
       valid_ct = valid_ct[valid_ct <= hi]
-      C0_ref_data = float(np.percentile(valid_ct, 95))
+      if len(valid_ct) > 0:
+        C0_ref_data = float(np.percentile(valid_ct, 95))
     
     # Check C0_ref from spec or default
-    if C_nom_spec is not None and C0_ref_data is not None:
-      C0_ref = float(np.clip(C0_ref_data, 0.95 * C_nom_spec, 1.05 * C_nom_spec))
+    if C_nom_spec is not None and C0_ref_data is not None and valid_ct.max() > 0.3 * C_nom_spec:
+      C0_ref = float(np.clip(C0_ref_data, 0.5 * C_nom_spec, 1.05 * C_nom_spec))
     elif C0_ref_data is not None:
       C0_ref = float(C0_ref_data)
     elif C_nom_spec is not None:

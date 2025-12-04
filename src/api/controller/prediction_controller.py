@@ -30,6 +30,9 @@ load_dotenv(dotenv_path=ENV_PATH)
 # Define model directory
 MODEL_DIR = os.getenv("MODEL_DIR")
 
+# Define max rows to process
+MAX_ROWS = 500
+
 if not MODEL_DIR:
     raise RuntimeError("MODEL_DIR is not set. Check your .env and ENV_PATH configuration.")
 
@@ -163,7 +166,13 @@ def run_prediction_pipeline(device_id: str) -> PredictionResponse:
     
     df_feat = df_metrics.copy()
     df_feat = df_feat.dropna(subset=feature_cols + [target_col])
-    df_feat = df_feat.sort_values(["device_id", "created_at"]).reset_index(drop=True)
+    df_feat = (
+      df_feat
+      .sort_values(["device_id", "created_at"])    
+      .groupby("device_id")
+      .head(MAX_ROWS)   
+      .reset_index(drop=True)
+    )
     
     logging.info(f"FIRST TIMESTAMP API: {df_raw['created_at'].min()}")
     logging.info(f"LAST TIMESTAMP API: {df_raw['created_at'].max()}")
@@ -172,7 +181,7 @@ def run_prediction_pipeline(device_id: str) -> PredictionResponse:
     logging.info(f"Feature columns to list: {df_metrics.columns.to_list()}")
     
     # Ensure soh true column exists
-    soh_true_col = "SoH_smooth" if "SoH_smooth" in df_metrics.columns else "SoH_pct"
+    soh_true_col = target_col
     
     # Build sliding windows for prediction
     values = df_feat[feature_cols].values
@@ -194,9 +203,15 @@ def run_prediction_pipeline(device_id: str) -> PredictionResponse:
     X = np.array(windows)
     X_scaled = scaler.transform(X.reshape(-1, X.shape[-1])).reshape(X.shape)
     soh_pred_arr = model.predict(X_scaled).reshape(-1) * 100.0
+    soh_pred_smooth_arr = (
+      pd.Series(soh_pred_arr)
+      .rolling(window=7, min_periods=1, center=True)
+      .mean()
+      .to_numpy()
+    )
     
     # Last point for summary
-    soh_pred_pct_last = safe_float(soh_pred_arr[-1], 0.0, field="soh_pred_pct_last") or 0.0
+    soh_pred_pct_last = safe_float(soh_pred_smooth_arr[-1], 0.0, field="soh_pred_pct_last") or 0.0
     soh_pred_last = soh_pred_pct_last / 100.0
     
     # Estimate remaining useful life from soh prediction
