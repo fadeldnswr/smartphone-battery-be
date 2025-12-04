@@ -229,7 +229,7 @@
   ],
   "target_col": "SoH_filled",
   "scaler_type": "StandardScaler",
-  "model_version": "20251204_221917",
+  "model_version": "20251204_215906",
   "rul_config": {
     "strategy": "global_linear_deterministic",
     "k_global": 0.0004,

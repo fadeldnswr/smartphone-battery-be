@@ -207,7 +207,6 @@
     "app_Turbo VPN",
     "app_UC Browser",
     "app_UI Sistem",
-    "app_Videos (System)",
     "app_Voice Recorder",
     "app_WPS Office",
     "app_WhatsApp",
@@ -229,12 +228,12 @@
   ],
   "target_col": "SoH_filled",
   "scaler_type": "StandardScaler",
-  "model_version": "20251204_221917",
+  "model_version": "20251204_173247",
   "rul_config": {
     "strategy": "global_linear_deterministic",
-    "k_global": 0.0004,
+    "k_global": 0.5664797803444099,
     "soh_eol": 0.7,
-    "hours_per_cycle": 174.18228719304486,
+    "hours_per_cycle": 173.25271055210163,
     "notes": "k_global ~ average SoH drop per EFC; SoH in fraction [0,1]. RUL_cycles = max((SoH_pred - soh_eol) / k_global, 0)."
   }
 }
