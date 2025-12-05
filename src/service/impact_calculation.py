@@ -56,7 +56,7 @@ def compute_ewaste_impact(
     if action == "replace_battery":
       # Case for battery replacement
       ewaste_baseline = phone_mass_kg
-      ewaste_with_system = MASS_PHONE_BATTERY_KG
+      ewaste_with_system = (1 - alpha) * phone_mass_kg + alpha * MASS_PHONE_BATTERY_KG
       ewaste_reduced = ewaste_baseline - ewaste_with_system
       carbon_saved = ewaste_reduced * CARBON_PER_KG
       car_km = carbon_to_car_km(carbon_saved_kg=carbon_saved)
