@@ -54,8 +54,21 @@ def compute_ewaste_impact(
       ewaste_baseline = phone_mass_kg
       ewaste_with_system = phone_mass_kg
     if action == "replace_battery":
+      # Case for battery replacement
       ewaste_baseline = phone_mass_kg
       ewaste_with_system = MASS_PHONE_BATTERY_KG
+      ewaste_reduced = ewaste_baseline - ewaste_with_system
+      carbon_saved = ewaste_reduced * CARBON_PER_KG
+      car_km = carbon_to_car_km(carbon_saved_kg=carbon_saved)
+      # Return EwasteImpact object
+      return EwasteImpact(
+        alpha=alpha,
+        ewaste_baseline_kg=ewaste_baseline,
+        ewaste_with_system_kg=ewaste_with_system,
+        ewaste_reduced_kg=ewaste_reduced,
+        carbon_saved_kg=carbon_saved,
+        car_km_equivalent=car_km
+      )
     if action == "replace_screen":
       ewaste_baseline = phone_mass_kg
       ewaste_with_system = MASS_PHONE_SCREEN_KG
